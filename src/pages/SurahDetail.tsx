@@ -1,15 +1,21 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { quranApi } from "@/services/quranApi";
 import { VerseCard } from "@/components/quran/VerseCard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Book } from "lucide-react";
+import { ArrowLeft, Book, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export const SurahDetail = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [swipeStart, setSwipeStart] = useState<number | null>(null);
+  const [swipeDistance, setSwipeDistance] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const surahNum = parseInt(surahNumber || "1");
 
@@ -18,6 +24,82 @@ export const SurahDetail = () => {
     queryFn: () => quranApi.getSuratDetail(surahNum),
     enabled: !!surahNum && surahNum >= 1 && surahNum <= 114,
   });
+
+  // Scroll to verse if hash is present
+  useEffect(() => {
+    if (surah && window.location.hash) {
+      const verseId = window.location.hash.substring(1);
+      const element = document.getElementById(verseId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('highlight');
+          setTimeout(() => element.classList.remove('highlight'), 3000);
+        }, 500);
+      }
+    }
+  }, [surah]);
+
+  // Save last read verse
+  useEffect(() => {
+    if (surah) {
+      const lastRead = { surah: surahNum, verse: 1 };
+      localStorage.setItem('last_read_verse', JSON.stringify(lastRead));
+    }
+  }, [surah, surahNum]);
+
+  // Swipe navigation handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setSwipeStart(e.touches[0].clientX);
+    setSwipeDistance(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (swipeStart === null) return;
+    
+    const currentTouch = e.touches[0].clientX;
+    const distance = currentTouch - swipeStart;
+    setSwipeDistance(distance);
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeStart === null) return;
+    
+    const threshold = 100; // minimum swipe distance
+    
+    if (Math.abs(swipeDistance) > threshold) {
+      if (swipeDistance > 0 && surahNum > 1) {
+        // Swipe right - previous surah
+        navigate(`/surah/${surahNum - 1}`);
+        toast({
+          title: "Pindah Surah",
+          description: `Beralih ke surah sebelumnya`,
+        });
+      } else if (swipeDistance < 0 && surahNum < 114) {
+        // Swipe left - next surah  
+        navigate(`/surah/${surahNum + 1}`);
+        toast({
+          title: "Pindah Surah",
+          description: `Beralih ke surah selanjutnya`,
+        });
+      }
+    }
+    
+    setSwipeStart(null);
+    setSwipeDistance(0);
+  };
+
+  const goToPreviousSurah = () => {
+    if (surahNum > 1) {
+      navigate(`/surah/${surahNum - 1}`);
+    }
+  };
+
+  const goToNextSurah = () => {
+    if (surahNum < 114) {
+      navigate(`/surah/${surahNum + 1}`);
+    }
+  };
 
   if (!surahNumber || surahNum < 1 || surahNum > 114) {
     return (
@@ -49,7 +131,13 @@ export const SurahDetail = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div 
+      className="min-h-screen"
+      ref={containerRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="p-4 flex items-center space-x-3">
@@ -65,7 +153,7 @@ export const SurahDetail = () => {
           {surah ? (
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <h1 className="font-semibold text-foreground text-lg">
                     {surah.name}
                   </h1>
@@ -81,7 +169,41 @@ export const SurahDetail = () => {
           ) : (
             <LoadingSpinner size="sm" />
           )}
+
+          {/* Navigation buttons */}
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToPreviousSurah}
+              disabled={surahNum <= 1}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToNextSurah}
+              disabled={surahNum >= 114}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
+
+        {/* Swipe indicator */}
+        {Math.abs(swipeDistance) > 50 && (
+          <div className="absolute top-full left-0 right-0 bg-primary/10 p-2 text-center">
+            <p className="text-sm text-primary">
+              {swipeDistance > 0 
+                ? `← Surah sebelumnya ${surahNum > 1 ? `(${surahNum - 1})` : ''}` 
+                : `Surah selanjutnya → ${surahNum < 114 ? `(${surahNum + 1})` : ''}`
+              }
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -128,12 +250,13 @@ export const SurahDetail = () => {
             {/* Verses */}
             <div className="space-y-4">
               {surah.verses.map((verse) => (
-                <VerseCard
-                  key={verse.number}
-                  verse={verse}
-                  surahNumber={surah.number_of_surah}
-                  surahName={surah.name}
-                />
+                <div key={verse.number} id={`verse-${verse.number}`}>
+                  <VerseCard
+                    verse={verse}
+                    surahNumber={surah.number_of_surah}
+                    surahName={surah.name}
+                  />
+                </div>
               ))}
             </div>
 

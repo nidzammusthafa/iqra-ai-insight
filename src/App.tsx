@@ -8,6 +8,7 @@ import { QuranHome } from "./pages/QuranHome";
 import { SurahDetail } from "./pages/SurahDetail";
 import { HaditsHome } from "./pages/HaditsHome";
 import { SearchPage } from "./pages/SearchPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/surah/:surahNumber" element={<SurahDetail />} />
             <Route path="/hadits" element={<HaditsHome />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

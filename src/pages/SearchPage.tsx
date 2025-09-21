@@ -1,29 +1,48 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { quranApi } from "@/services/quranApi";
 import { TranslationId } from "@/types/quran";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, BookOpen, Sparkles, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const SearchPage = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState<"verses" | "surahs">("verses");
   const [hasSearched, setHasSearched] = useState(false);
+  const [translationFilter, setTranslationFilter] = useState<TranslationId>(TranslationId.ID);
+  const [surahFilter, setSurahFilter] = useState<string>("");
 
   const { data: searchResults, isLoading } = useQuery({
-    queryKey: ["search", searchTerm, searchType],
+    queryKey: ["search", searchTerm, searchType, translationFilter, surahFilter],
     queryFn: () => {
       if (searchType === "verses") {
-        return quranApi.searchVerses(searchTerm, TranslationId.ID, 1, 20);
+        return quranApi.searchVerses(searchTerm, translationFilter, 1, 50);
       } else {
         return quranApi.searchSurats(searchTerm);
       }
     },
     enabled: hasSearched && searchTerm.length > 2,
   });
+
+  const { data: allSurahs } = useQuery({
+    queryKey: ["allSurahs"],
+    queryFn: () => quranApi.getAllSurats(),
+  });
+
+  const handleVerseClick = (surahNumber: number, verseNumber: number) => {
+    navigate(`/surah/${surahNumber}#verse-${verseNumber}`);
+  };
+
+  const handleSurahClick = (surahNumber: number) => {
+    navigate(`/surah/${surahNumber}`);
+  };
 
   const handleSearch = () => {
     if (searchTerm.length > 2) {
@@ -94,6 +113,42 @@ export const SearchPage = () => {
             className="pl-10 bg-muted/50 border-muted-foreground/20 focus:border-primary"
           />
         </div>
+
+        {/* Advanced Filters */}
+        {searchType === "verses" && (
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Filter className="w-4 h-4" />
+              <span>Filter Pencarian</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Select value={translationFilter} onValueChange={(value) => setTranslationFilter(value as TranslationId)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Bahasa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TranslationId.ID}>Indonesia</SelectItem>
+                  <SelectItem value={TranslationId.EN}>English</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={surahFilter} onValueChange={setSurahFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Surah" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Semua Surah</SelectItem>
+                  {allSurahs?.map((surah) => (
+                    <SelectItem key={surah.number_of_surah} value={surah.number_of_surah.toString()}>
+                      {surah.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
         
         <Button 
           onClick={handleSearch}
@@ -128,13 +183,30 @@ export const SearchPage = () => {
                 Ditemukan {searchResults.length} hasil
               </p>
               
-              {searchResults.map((result, index) => (
-                <div key={index} className="verse-card">
+              {searchResults
+                .filter((result) => 
+                  !surahFilter || result.surah_number?.toString() === surahFilter || result.number_of_surah?.toString() === surahFilter
+                )
+                .map((result, index) => (
+                <div 
+                  key={index} 
+                  className="verse-card cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => {
+                    if (searchType === "verses") {
+                      handleVerseClick(result.surah_number || result.number_of_surah, result.ayah_number || result.number);
+                    } else {
+                      handleSurahClick(result.number_of_surah);
+                    }
+                  }}
+                >
                   {searchType === "verses" ? (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-primary">
+                        <Badge variant="secondary" className="text-xs">
                           QS. {result.surah_name || result.name} : {result.ayah_number || result.number}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          Ketuk untuk buka
                         </span>
                       </div>
                       
@@ -152,7 +224,7 @@ export const SearchPage = () => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4 flex-1">
                         <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
                           {result.number_of_surah}
                         </div>
@@ -174,6 +246,10 @@ export const SearchPage = () => {
                           </div>
                         </div>
                       </div>
+                      
+                      <span className="text-xs text-muted-foreground ml-2">
+                        Ketuk untuk buka
+                      </span>
                     </div>
                   )}
                 </div>

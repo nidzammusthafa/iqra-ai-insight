@@ -1,4 +1,4 @@
-import { Book, BookOpen, Search } from "lucide-react";
+import { Book, BookOpen, Search, Settings } from "lucide-react";
 import { ReactNode } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,12 @@ const navItems = [
     icon: Search,
     path: "/search", 
     activePattern: /^\/search/
+  },
+  {
+    label: "Pengaturan",
+    icon: Settings,
+    path: "/settings",
+    activePattern: /^\/settings/
   }
 ];
 

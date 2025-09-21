@@ -21,6 +21,11 @@ class QuranApiService {
     return data.data;
   }
 
+  // Alias for getAllSurats
+  async getAllSurats(): Promise<SuratResponse[]> {
+    return this.getSuratList();
+  }
+
   // Get detailed surah with verses
   async getSuratDetail(
     suratNumber: number, 
