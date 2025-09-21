@@ -1,12 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { VerseInsight } from "@/types/quran";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { GeminiApiKeyDialog } from "@/components/dialogs/GeminiApiKeyDialog";
-import { geminiApi } from "@/services/geminiApi";
+import { generateVerseInsight } from "@/services/geminiApi";
 import { useToast } from "@/hooks/use-toast";
-import { X, Book, Calendar, Link, Sparkles, Key, Lightbulb } from "lucide-react";
+import {
+  X,
+  Book,
+  Calendar,
+  Link,
+  Sparkles,
+  Key,
+  Lightbulb,
+} from "lucide-react";
 
 interface AIInsightPanelProps {
   surahNumber: number;
@@ -17,13 +25,13 @@ interface AIInsightPanelProps {
   className?: string;
 }
 
-export const AIInsightPanel = ({ 
-  surahNumber, 
+export const AIInsightPanel = ({
+  surahNumber,
   verseNumber,
   verseText,
-  verseTranslation, 
-  onClose, 
-  className 
+  verseTranslation,
+  onClose,
+  className,
 }: AIInsightPanelProps) => {
   const [insights, setInsights] = useState<VerseInsight | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,8 +40,59 @@ export const AIInsightPanel = ({
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const { toast } = useToast();
 
+  const fetchInsights = useCallback(async () => {
+    if (!apiKey) {
+      setShowApiKeyDialog(true);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const generatedInsights = await generateVerseInsight(
+        surahNumber,
+        verseNumber,
+        verseText,
+        verseTranslation,
+        { apiKey }
+      );
+
+      setInsights(generatedInsights);
+
+      toast({
+        title: "Wawasan berhasil dimuat",
+        description: "Analisis AI untuk ayat telah tersedia",
+      });
+    } catch (err) {
+      console.error("Failed to fetch insights:", err);
+
+      if (err.message?.includes("API_KEY_INVALID")) {
+        setError(
+          "API key tidak valid. Silakan periksa dan perbarui API key Anda."
+        );
+        localStorage.removeItem("gemini_api_key");
+        setApiKey(null);
+      } else if (err.message?.includes("QUOTA_EXCEEDED")) {
+        setError(
+          "Kuota API Gemini telah habis. Silakan coba lagi nanti atau periksa billing Anda."
+        );
+      } else {
+        setError("Gagal memuat wawasan ayat. Silakan coba lagi.");
+      }
+
+      toast({
+        title: "Gagal memuat wawasan",
+        description: err.message || "Terjadi kesalahan saat memuat analisis AI",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [apiKey, surahNumber, verseNumber, verseText, verseTranslation, toast]);
+
   useEffect(() => {
-    const storedApiKey = localStorage.getItem('gemini_api_key');
+    const storedApiKey = localStorage.getItem("gemini_api_key");
     if (storedApiKey) {
       setApiKey(storedApiKey);
     }
@@ -43,54 +102,7 @@ export const AIInsightPanel = ({
     if (apiKey) {
       fetchInsights();
     }
-  }, [surahNumber, verseNumber, apiKey]);
-
-  const fetchInsights = async () => {
-    if (!apiKey) {
-      setShowApiKeyDialog(true);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const generatedInsights = await geminiApi.generateVerseInsight(
-        surahNumber,
-        verseNumber,
-        verseText,
-        verseTranslation,
-        { apiKey }
-      );
-      
-      setInsights(generatedInsights);
-      
-      toast({
-        title: "Wawasan berhasil dimuat",
-        description: "Analisis AI untuk ayat telah tersedia",
-      });
-    } catch (err: any) {
-      console.error('Failed to fetch insights:', err);
-      
-      if (err.message?.includes('API_KEY_INVALID')) {
-        setError("API key tidak valid. Silakan periksa dan perbarui API key Anda.");
-        localStorage.removeItem('gemini_api_key');
-        setApiKey(null);
-      } else if (err.message?.includes('QUOTA_EXCEEDED')) {
-        setError("Kuota API Gemini telah habis. Silakan coba lagi nanti atau periksa billing Anda.");
-      } else {
-        setError("Gagal memuat wawasan ayat. Silakan coba lagi.");
-      }
-      
-      toast({
-        title: "Gagal memuat wawasan",
-        description: err.message || "Terjadi kesalahan saat memuat analisis AI",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [surahNumber, verseNumber, apiKey, fetchInsights]);
 
   const handleApiKeySet = (newApiKey: string) => {
     setApiKey(newApiKey);
@@ -113,7 +125,7 @@ export const AIInsightPanel = ({
             <Sparkles className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Wawasan Ayat AI</h3>
             <span className="text-xs bg-primary-light text-primary px-2 py-1 rounded-full">
-              Gemini 2.0 Flash
+              Gemini 2.5 Flash
             </span>
           </div>
           <div className="flex items-center space-x-2">
@@ -147,7 +159,8 @@ export const AIInsightPanel = ({
             </div>
             <h4 className="font-medium text-foreground">API Key Diperlukan</h4>
             <p className="text-muted-foreground text-sm">
-              Untuk mengakses wawasan ayat dengan AI, Anda memerlukan API key Google Gemini
+              Untuk mengakses wawasan ayat dengan AI, Anda memerlukan API key
+              Google Gemini
             </p>
             <Button onClick={() => setShowApiKeyDialog(true)} className="mt-3">
               <Key className="w-4 h-4 mr-2" />
@@ -157,7 +170,9 @@ export const AIInsightPanel = ({
         ) : loading ? (
           <div className="flex items-center justify-center py-8">
             <LoadingSpinner size="md" />
-            <span className="ml-2 text-muted-foreground">Menganalisis ayat...</span>
+            <span className="ml-2 text-muted-foreground">
+              Menganalisis ayat...
+            </span>
           </div>
         ) : error ? (
           <div className="text-center py-4 space-y-3">
@@ -192,7 +207,9 @@ export const AIInsightPanel = ({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Book className="w-4 h-4 text-primary" />
-                  <h4 className="font-medium text-foreground">Tafsir Ringkas</h4>
+                  <h4 className="font-medium text-foreground">
+                    Tafsir Ringkas
+                  </h4>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {insights.tafsir_summary}
@@ -205,7 +222,9 @@ export const AIInsightPanel = ({
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Lightbulb className="w-4 h-4 text-secondary" />
-                  <h4 className="font-medium text-foreground">Hikmah Praktis</h4>
+                  <h4 className="font-medium text-foreground">
+                    Hikmah Praktis
+                  </h4>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {insights.practical_wisdom}
@@ -235,7 +254,10 @@ export const AIInsightPanel = ({
               <div className="space-y-2">
                 <h4 className="font-medium text-foreground">Hadits Terkait</h4>
                 {insights.related_hadits.map((hadits, index) => (
-                  <div key={index} className="bg-muted/50 rounded-lg p-3 text-sm space-y-2">
+                  <div
+                    key={index}
+                    className="bg-muted/50 rounded-lg p-3 text-sm space-y-2"
+                  >
                     <p className="text-muted-foreground leading-relaxed">
                       {hadits.text}
                     </p>
@@ -262,7 +284,10 @@ export const AIInsightPanel = ({
                   <h4 className="font-medium text-foreground">Ayat Terkait</h4>
                 </div>
                 {insights.related_verses.map((relatedVerse, index) => (
-                  <div key={index} className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                  <div
+                    key={index}
+                    className="bg-muted/50 rounded-lg p-3 text-sm space-y-1"
+                  >
                     {relatedVerse.text && (
                       <p className="text-muted-foreground leading-relaxed">
                         {relatedVerse.text}
@@ -270,7 +295,8 @@ export const AIInsightPanel = ({
                     )}
                     <div className="flex flex-col space-y-1 text-xs">
                       <span className="text-primary font-medium">
-                        QS. {relatedVerse.surah_number}:{relatedVerse.ayah_number}
+                        QS. {relatedVerse.surah_number}:
+                        {relatedVerse.ayah_number}
                       </span>
                       <span className="text-muted-foreground italic">
                         {relatedVerse.connection}

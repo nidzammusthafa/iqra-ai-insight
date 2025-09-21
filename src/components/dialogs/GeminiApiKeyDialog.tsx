@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Key, Eye, EyeOff, ExternalLink, Info } from "lucide-react";
-import { geminiApi, GeminiApiService } from "@/services/geminiApi";
+import { validateApiKey } from "@/services/geminiApi";
 
 interface GeminiApiKeyDialogProps {
   open: boolean;
@@ -19,10 +19,10 @@ interface GeminiApiKeyDialogProps {
   onApiKeySet: (apiKey: string) => void;
 }
 
-export const GeminiApiKeyDialog = ({ 
-  open, 
-  onOpenChange, 
-  onApiKeySet 
+export const GeminiApiKeyDialog = ({
+  open,
+  onOpenChange,
+  onApiKeySet,
 }: GeminiApiKeyDialogProps) => {
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
@@ -31,40 +31,44 @@ export const GeminiApiKeyDialog = ({
 
   const handleSubmit = async () => {
     setError("");
-    
+
     if (!apiKey.trim()) {
       setError("API key tidak boleh kosong");
       return;
     }
 
-    if (!GeminiApiService.validateApiKey(apiKey.trim())) {
-      setError("Format API key tidak valid. API key Gemini harus dimulai dengan 'AIza'");
+          if (!validateApiKey(apiKey.trim())) {      setError(
+        "Format API key tidak valid. API key Gemini harus dimulai dengan 'AIza'"
+      );
       return;
     }
 
     setIsValidating(true);
-    
+
     try {
       // Test the API key with a simple request
       await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey.trim()}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ parts: [{ text: "Test" }] }],
-            generationConfig: { maxOutputTokens: 1 }
-          })
+            generationConfig: { maxOutputTokens: 1 },
+          }),
         }
       );
 
       // If we get here, API key is valid
-      localStorage.setItem('gemini_api_key', apiKey.trim());
+      localStorage.setItem("gemini_api_key", apiKey.trim());
       onApiKeySet(apiKey.trim());
       onOpenChange(false);
       setApiKey("");
-    } catch (error: any) {
-      if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('400')) {
+    } catch (error) {
+      if (
+        error.message?.includes("API_KEY_INVALID") ||
+        error.message?.includes("400")
+      ) {
         setError("API key tidak valid. Silakan periksa kembali API key Anda.");
       } else {
         setError("Gagal memvalidasi API key. Periksa koneksi internet Anda.");
@@ -83,16 +87,17 @@ export const GeminiApiKeyDialog = ({
             <span>API Key Gemini</span>
           </DialogTitle>
           <DialogDescription>
-            Masukkan API key Google Gemini untuk mengakses wawasan ayat berbasis AI
+            Masukkan API key Google Gemini untuk mengakses wawasan ayat berbasis
+            AI
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Info Alert */}
           <Alert>
             <Info className="w-4 h-4" />
             <AlertDescription className="text-sm">
-              API key akan disimpan secara lokal di browser Anda untuk keamanan. 
+              API key akan disimpan secara lokal di browser Anda untuk keamanan.
               Tidak ada data yang dikirim ke server kami.
             </AlertDescription>
           </Alert>
@@ -145,7 +150,12 @@ export const GeminiApiKeyDialog = ({
               variant="link"
               size="sm"
               className="p-0 h-auto text-xs"
-              onClick={() => window.open('https://makersuite.google.com/app/apikey', '_blank')}
+              onClick={() =>
+                window.open(
+                  "https://makersuite.google.com/app/apikey",
+                  "_blank"
+                )
+              }
             >
               <ExternalLink className="w-3 h-3 mr-1" />
               Buka Google AI Studio
