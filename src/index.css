@@ -2,39 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Islamic-inspired design system with beautiful typography and colors */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
+    /* Base colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
+    --foreground: 210 40% 2%;
+    
+    /* Islamic green palette */
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 142 50% 85%;
+    --primary-glow: 142 76% 45%;
+    
+    /* Golden accent colors */
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 38 70% 90%;
+    
+    /* Neutral grays */
+    --muted: 210 40% 98%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
+    --accent: 210 40% 96%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
+    /* Card colors */
+    --card: 0 0% 100%;
+    --card-foreground: 210 40% 2%;
+    --card-shadow: 142 76% 36% / 0.08;
+    
+    /* Popover colors */
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 40% 2%;
+    
+    /* Status colors */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Border and input colors */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 142 76% 36%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 45%));
+    --gradient-secondary: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(158 64% 52%) 50%, hsl(38 92% 50%) 100%);
+    
+    /* Shadows */
+    --shadow-soft: 0 2px 8px hsl(142 76% 36% / 0.08);
+    --shadow-medium: 0 4px 16px hsl(142 76% 36% / 0.12);
+    --shadow-strong: 0 8px 32px hsl(142 76% 36% / 0.16);
 
     --radius: 0.5rem;
 
@@ -56,33 +78,55 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 220 27% 8%;
     --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
+    
+    /* Islamic green palette - darker theme */
+    --primary: 142 70% 45%;
+    --primary-foreground: 220 27% 8%;
+    --primary-light: 142 30% 25%;
+    --primary-glow: 142 70% 50%;
+    
+    /* Golden accent - darker theme */
+    --secondary: 38 90% 55%;
+    --secondary-foreground: 220 27% 8%;
+    --secondary-light: 38 30% 25%;
+    
+    /* Card colors - dark */
+    --card: 220 27% 10%;
     --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
+    --card-shadow: 142 70% 45% / 0.15;
+    
+    /* Popover colors - dark */
+    --popover: 220 27% 10%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
+    
+    /* Neutral grays - dark */
+    --muted: 220 27% 15%;
     --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 220 27% 15%;
     --accent-foreground: 210 40% 98%;
-
+    
+    /* Status colors - dark */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --success: 142 70% 45%;
+    --success-foreground: 220 27% 8%;
+    
+    /* Border and input - dark */
+    --border: 220 27% 20%;
+    --input: 220 27% 20%;
+    --ring: 142 70% 45%;
+    
+    /* Gradients - dark theme */
+    --gradient-primary: linear-gradient(135deg, hsl(142 70% 45%), hsl(142 70% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(38 90% 55%), hsl(38 90% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(142 70% 45%) 0%, hsl(158 60% 50%) 50%, hsl(38 90% 55%) 100%);
+    
+    /* Shadows - dark theme */
+    --shadow-soft: 0 2px 8px hsl(0 0% 0% / 0.3);
+    --shadow-medium: 0 4px 16px hsl(0 0% 0% / 0.4);
+    --shadow-strong: 0 8px 32px hsl(0 0% 0% / 0.5);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +144,64 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  
+  /* Arabic text styling */
+  .arabic-text {
+    font-family: 'Amiri', 'Traditional Arabic', serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 2.2;
+    font-size: 1.5rem;
+  }
+  
+  .arabic-large {
+    font-size: 2rem;
+    line-height: 2.4;
+  }
+  
+  .arabic-small {
+    font-size: 1.25rem;
+    line-height: 2;
+  }
+  
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-primary/40 rounded-full;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/60;
+  }
+}
+
+@layer components {
+  /* Mobile-first components */
+  .mobile-container {
+    @apply w-full max-w-md mx-auto bg-background min-h-screen;
+  }
+  
+  .bottom-nav {
+    @apply fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-card border-t border-border;
+    box-shadow: var(--shadow-medium);
+  }
+  
+  .verse-card {
+    @apply bg-card rounded-xl p-4 border border-border;
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .ai-panel {
+    @apply bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-lg p-4;
   }
 }
