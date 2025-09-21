@@ -132,6 +132,7 @@ export const SurahDetail = () => {
                   key={verse.number}
                   verse={verse}
                   surahNumber={surah.number_of_surah}
+                  surahName={surah.name}
                 />
               ))}
             </div>

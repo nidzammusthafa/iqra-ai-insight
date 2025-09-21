@@ -92,22 +92,56 @@ export type Hadits = {
   id: string;
 };
 
-// AI Insights types
+// Enhanced AI Insights types with Gemini integration
 export type VerseInsight = {
   asbabun_nuzul?: string;
   related_hadits?: {
     hadits_number: string;
     text: string;
     source: string;
+    relevance?: string;
   }[];
   tafsir_summary?: string;
   historical_context?: string;
   related_verses?: {
     surah_number: number;
     ayah_number: number;
-    text: string;
+    text?: string;
     connection: string;
   }[];
+  practical_wisdom?: string;
+  key_themes?: string[];
+};
+
+// Reading preferences
+export type ReadingPreferences = {
+  arabicFontSize: 'small' | 'medium' | 'large' | 'xl';
+  translationFontSize: 'small' | 'medium' | 'large';
+  showTranslation: boolean;
+  defaultTranslation: TranslationId;
+  lineSpacing: 'compact' | 'normal' | 'relaxed';
+  theme: 'light' | 'dark' | 'auto';
+};
+
+// Bookmark types
+export type Bookmark = {
+  id: string;
+  surahNumber: number;
+  verseNumber: number;
+  surahName: string;
+  verseText: string;
+  verseTranslation: string;
+  note?: string;
+  createdAt: string;
+  tags?: string[];
+};
+
+export type BookmarkFolder = {
+  id: string;
+  name: string;
+  color: string;
+  bookmarkIds: string[];
+  createdAt: string;
 };
 
 // API Response wrappers
