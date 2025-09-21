@@ -1,9 +1,9 @@
-import { SuratResponse } from "@/types/quran";
+import { SurahListItem } from "@/types/quran";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 
 interface SurahCardProps {
-  surah: SuratResponse;
+  surah: SurahListItem;
   onClick: () => void;
   className?: string;
 }
@@ -23,7 +23,7 @@ export const SurahCard = ({ surah, onClick, className }: SurahCardProps) => {
         <div className="flex items-center space-x-4">
           {/* Surah number in Islamic style */}
           <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-            {surah.number_of_surah}
+            {surah.number}
           </div>
           
           <div className="flex-1">
@@ -31,19 +31,16 @@ export const SurahCard = ({ surah, onClick, className }: SurahCardProps) => {
               <h3 className="font-semibold text-foreground">
                 {surah.name}
               </h3>
-              <span className="arabic-small text-primary font-bold">
-                {surah.name_translations.ar}
-              </span>
             </div>
             
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>{surah.name_translations.id}</span>
+              <span>{surah.translation}</span>
               <span>•</span>
-              <span>{surah.number_of_ayah} ayat</span>
-              {surah.place && (
+              <span>{surah.numberOfAyahs} ayat</span>
+              {surah.revelation && (
                 <>
                   <span>•</span>
-                  <span>{surah.place}</span>
+                  <span>{surah.revelation}</span>
                 </>
               )}
             </div>

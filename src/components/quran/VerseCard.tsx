@@ -1,8 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Verse } from "@/types/quran";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Lightbulb, Share, Volume2, Bookmark, BookmarkCheck } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Lightbulb,
+  Share,
+  Volume2,
+  Bookmark,
+  BookmarkCheck,
+  Play,
+  Pause,
+} from "lucide-react";
 import { AIInsightPanel } from "./AIInsightPanel";
 import { BookmarkDialog } from "../dialogs/BookmarkDialog";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -14,49 +24,101 @@ interface VerseCardProps {
   surahNumber: number;
   surahName: string;
   className?: string;
+  playingVerse: number | null;
+  setPlayingVerse: (verseNumber: number | null) => void;
 }
 
-export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCardProps) => {
+export const VerseCard = ({
+  verse,
+  surahNumber,
+  surahName,
+  className,
+  playingVerse,
+  setPlayingVerse,
+}: VerseCardProps) => {
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
-  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const { preferences, updatePreferences } = useReadingPreferences();
-  const { 
-    isBookmarked, 
-    getBookmark, 
-    addBookmark, 
-    removeBookmark, 
-    updateBookmark 
+  const {
+    isBookmarked,
+    getBookmark,
+    addBookmark,
+    removeBookmark,
+    updateBookmark,
   } = useBookmarks();
   const { toast } = useToast();
-  
-  const isCurrentlyBookmarked = isBookmarked(surahNumber, verse.number);
-  const existingBookmark = getBookmark(surahNumber, verse.number);
+
+  const verseNumber = verse.number.inSurah;
+  const verseText = verse.arab || verse.text;
+  const verseTranslation = verse.translation || verse.translation_id || "";
+
+  const isCurrentlyBookmarked = isBookmarked(surahNumber, verseNumber);
+  const existingBookmark = getBookmark(surahNumber, verseNumber);
+  const isPlaying = playingVerse === verseNumber;
+
+  useEffect(() => {
+    const qari = preferences.selectedQari;
+    if (verse.audio && verse.audio[qari]) {
+      audioRef.current = new Audio(verse.audio[qari]);
+      audioRef.current.onended = () => setPlayingVerse(null);
+    } else {
+      audioRef.current = null;
+    }
+
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, [verse.audio, preferences.selectedQari, setPlayingVerse]);
+
+  useEffect(() => {
+    if (playingVerse !== verseNumber && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, [playingVerse, verseNumber]);
 
   const handleShare = () => {
-    const text = `${verse.text}\n\n${verse.translation_id}\n\nQS. ${surahName} (${surahNumber}):${verse.number}`;
-    
+    const text = `${verseText}\n\n${verseTranslation}\n\nQS. ${surahName} (${surahNumber}):${verseNumber}`;
+
     if (navigator.share) {
       navigator.share({
-        title: `QS. ${surahName} ${surahNumber}:${verse.number}`,
+        title: `QS. ${surahName} ${surahNumber}:${verseNumber}`,
         text: text,
       });
     } else {
       navigator.clipboard.writeText(text);
       toast({
         title: "Ayat disalin",
-        description: "Ayat telah disalin ke clipboard"
+        description: "Ayat telah disalin ke clipboard",
       });
     }
   };
 
   const handleAudio = () => {
-    // Placeholder for audio functionality
-    console.log(`Play audio for verse ${surahNumber}:${verse.number}`);
-    toast({
-      title: "Audio belum tersedia",
-      description: "Fitur audio sedang dalam pengembangan"
-    });
+    if (!audioRef.current) {
+      toast({
+        title: "Audio tidak tersedia",
+        description: "Audio untuk ayat ini tidak ditemukan.",
+      });
+      return;
+    }
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setPlayingVerse(null);
+    } else {
+      audioRef.current.play().catch((err) => {
+        console.error("Audio playback failed:", err);
+        toast({
+          variant: "destructive",
+          title: "Gagal memutar audio",
+          description: "Tidak dapat memutar file audio.",
+        });
+      });
+      setPlayingVerse(verseNumber);
+    }
   };
 
   const handleBookmarkToggle = () => {
@@ -65,7 +127,7 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
         removeBookmark(existingBookmark.id);
         toast({
           title: "Bookmark dihapus",
-          description: `QS. ${surahName} ${surahNumber}:${verse.number}`
+          description: `QS. ${surahName} ${surahNumber}:${verseNumber}`,
         });
       }
     } else {
@@ -73,44 +135,55 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleBookmarkSave = (bookmarkData: any) => {
     if (existingBookmark) {
       updateBookmark(existingBookmark.id, bookmarkData);
       toast({
         title: "Bookmark diperbarui",
-        description: `QS. ${surahName} ${surahNumber}:${verse.number}`
+        description: `QS. ${surahName} ${surahNumber}:${verseNumber}`,
       });
     } else {
       addBookmark(bookmarkData);
       toast({
         title: "Bookmark ditambahkan",
-        description: `QS. ${surahName} ${surahNumber}:${verse.number}`
+        description: `QS. ${surahName} ${surahNumber}:${verseNumber}`,
       });
     }
   };
 
   const getArabicFontClass = () => {
     switch (preferences.arabicFontSize) {
-      case 'small': return 'arabic-small';
-      case 'large': return 'arabic-large';
-      case 'xl': return 'text-3xl leading-relaxed';
-      default: return '';
+      case "small":
+        return "arabic-small";
+      case "large":
+        return "arabic-large";
+      case "xl":
+        return "text-3xl leading-relaxed";
+      default:
+        return "";
     }
   };
 
   const getTranslationFontClass = () => {
     switch (preferences.translationFontSize) {
-      case 'small': return 'text-sm';
-      case 'large': return 'text-lg';
-      default: return 'text-base';
+      case "small":
+        return "text-sm";
+      case "large":
+        return "text-lg";
+      default:
+        return "text-base";
     }
   };
 
   const getLineSpacingClass = () => {
     switch (preferences.lineSpacing) {
-      case 'compact': return 'leading-tight';
-      case 'relaxed': return 'leading-loose';
-      default: return 'leading-normal';
+      case "compact":
+        return "leading-tight";
+      case "relaxed":
+        return "leading-loose";
+      default:
+        return "leading-normal";
     }
   };
 
@@ -119,27 +192,42 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
       {/* Verse number badge */}
       <div className="flex items-center justify-between">
         <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center">
-          <span className="text-primary font-bold text-sm">{verse.number}</span>
+          <span className="text-primary font-bold text-sm">{verseNumber}</span>
         </div>
-        
+
         {/* Control buttons */}
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => updatePreferences({ showTranslation: !preferences.showTranslation })}
+            onClick={() =>
+              updatePreferences({
+                showTranslation: !preferences.showTranslation,
+              })
+            }
             className="text-muted-foreground hover:text-primary"
           >
-            {preferences.showTranslation ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {preferences.showTranslation ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
             onClick={handleAudio}
-            className="text-muted-foreground hover:text-primary"
+            className={cn(
+              "text-muted-foreground hover:text-primary",
+              isPlaying && "text-secondary"
+            )}
           >
-            <Volume2 className="w-4 h-4" />
+            {isPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
           </Button>
 
           <Button
@@ -151,9 +239,13 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
               isCurrentlyBookmarked && "text-secondary"
             )}
           >
-            {isCurrentlyBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+            {isCurrentlyBookmarked ? (
+              <BookmarkCheck className="w-4 h-4" />
+            ) : (
+              <Bookmark className="w-4 h-4" />
+            )}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -165,7 +257,7 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
           >
             <Lightbulb className="w-4 h-4" />
           </Button>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -178,32 +270,36 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
       </div>
 
       {/* Arabic text */}
-      <div className={cn(
-        "arabic-text text-foreground",
-        getArabicFontClass(),
-        getLineSpacingClass()
-      )}>
-        {verse.text}
+      <div
+        className={cn(
+          "arabic-text text-foreground",
+          getArabicFontClass(),
+          getLineSpacingClass()
+        )}
+      >
+        {verseText}
       </div>
 
       {/* Translation */}
-      {preferences.showTranslation && verse.translation_id && (
-        <div className={cn(
-          "text-muted-foreground border-l-2 border-primary-light pl-4",
-          getTranslationFontClass(),
-          getLineSpacingClass()
-        )}>
-          {verse.translation_id}
+      {preferences.showTranslation && verseTranslation && (
+        <div
+          className={cn(
+            "text-muted-foreground border-l-2 border-primary-light pl-4",
+            getTranslationFontClass(),
+            getLineSpacingClass()
+          )}
+        >
+          {verseTranslation}
         </div>
       )}
 
       {/* AI Insights Panel */}
       {showAIInsights && (
-        <AIInsightPanel 
-          surahNumber={surahNumber} 
-          verseNumber={verse.number}
-          verseText={verse.text}
-          verseTranslation={verse.translation_id || ""}
+        <AIInsightPanel
+          surahNumber={surahNumber}
+          verseNumber={verseNumber}
+          verseText={verseText}
+          verseTranslation={verseTranslation}
           onClose={() => setShowAIInsights(false)}
         />
       )}
@@ -213,10 +309,10 @@ export const VerseCard = ({ verse, surahNumber, surahName, className }: VerseCar
         open={showBookmarkDialog}
         onOpenChange={setShowBookmarkDialog}
         surahNumber={surahNumber}
-        verseNumber={verse.number}
+        verseNumber={verseNumber}
         surahName={surahName}
-        verseText={verse.text}
-        verseTranslation={verse.translation_id || ""}
+        verseText={verseText}
+        verseTranslation={verseTranslation}
         existingBookmark={existingBookmark}
         onSave={handleBookmarkSave}
       />

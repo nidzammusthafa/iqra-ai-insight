@@ -6,7 +6,9 @@ export const getSingleHadith = async (
   rawi: string,
   haditsNumber: number
 ): Promise<SingleHadithResponse> => {
-  const response = await fetch(`${API_BASE_URL}/hadits/${rawi}/${haditsNumber}`);
+  const response = await fetch(
+    `${API_BASE_URL}/hadits/${rawi}/${haditsNumber}`
+  );
   if (!response.ok) {
     throw new Error("Gagal memuat data hadits");
   }
@@ -25,6 +27,7 @@ export const getHadithList = async (
   rawi: string,
   page: number,
   size: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> => {
   const response = await fetch(
     `${API_BASE_URL}/hadits/${rawi}?page=${page}&size=${size}`

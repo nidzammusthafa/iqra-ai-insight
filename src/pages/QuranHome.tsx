@@ -13,16 +13,21 @@ export const QuranHome = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: surahs, isLoading, error } = useQuery({
+  const {
+    data: surahs,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["surahs"],
     queryFn: () => quranApi.getSuratList(),
   });
 
-  const filteredSurahs = surahs?.filter(surah => 
-    surah.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    surah.name_translations.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    surah.name_translations.ar.includes(searchTerm)
-  ) || [];
+  const filteredSurahs =
+    surahs?.filter(
+      (surah) =>
+        surah.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        surah.translation.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
   const handleSurahClick = (surahNumber: number) => {
     navigate(`/surah/${surahNumber}`);
@@ -33,7 +38,9 @@ export const QuranHome = () => {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <p className="text-destructive mb-2">Gagal memuat daftar surah</p>
-          <p className="text-muted-foreground text-sm">Silakan periksa koneksi internet Anda</p>
+          <p className="text-muted-foreground text-sm">
+            Silakan periksa koneksi internet Anda
+          </p>
         </div>
       </div>
     );
@@ -67,7 +74,9 @@ export const QuranHome = () => {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <LoadingSpinner size="lg" />
-          <span className="ml-3 text-muted-foreground">Memuat daftar surah...</span>
+          <span className="ml-3 text-muted-foreground">
+            Memuat daftar surah...
+          </span>
         </div>
       )}
 
@@ -81,12 +90,12 @@ export const QuranHome = () => {
                   {filteredSurahs.length} surah ditemukan
                 </p>
               </div>
-              
+
               {filteredSurahs.map((surah) => (
                 <SurahCard
-                  key={surah.number_of_surah}
+                  key={surah.number}
                   surah={surah}
-                  onClick={() => handleSurahClick(surah.number_of_surah)}
+                  onClick={() => handleSurahClick(surah.number)}
                 />
               ))}
             </>

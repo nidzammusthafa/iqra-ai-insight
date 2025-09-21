@@ -1,75 +1,106 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useReadingPreferences } from "@/hooks/useReadingPreferences";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Settings, 
-  Palette, 
-  BookOpen, 
-  Bookmark, 
+import {
+  Settings,
+  Palette,
+  BookOpen,
+  Bookmark,
   Clock,
   Trash2,
   Moon,
   Sun,
-  Monitor
+  Monitor,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Qari, QARIS } from "@/types/quran";
 
 export const SettingsPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { preferences, updatePreferences, resetPreferences } = useReadingPreferences();
+  const { preferences, updatePreferences, resetPreferences } =
+    useReadingPreferences();
   const { bookmarks, folders, searchBookmarks } = useBookmarks();
-  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('auto');
-  const [lastReadVerse, setLastReadVerse] = useState<{surah: number, verse: number} | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark" | "auto">("auto");
+  const [lastReadVerse, setLastReadVerse] = useState<{
+    surah: number;
+    verse: number;
+  } | null>(null);
 
   useEffect(() => {
     // Load theme from localStorage
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'auto';
+    const savedTheme = localStorage.getItem("theme") as
+      | "light"
+      | "dark"
+      | "auto";
     if (savedTheme) {
       setTheme(savedTheme);
     }
 
     // Load last read verse
-    const savedLastRead = localStorage.getItem('last_read_verse');
+    const savedLastRead = localStorage.getItem("last_read_verse");
     if (savedLastRead) {
       try {
         setLastReadVerse(JSON.parse(savedLastRead));
       } catch (error) {
-        console.error('Failed to parse last read verse:', error);
+        console.error("Failed to parse last read verse:", error);
       }
     }
   }, []);
 
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
+  const handleThemeChange = (newTheme: "light" | "dark" | "auto") => {
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
+    localStorage.setItem("theme", newTheme);
+
     // Apply theme to document
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    
-    if (newTheme === 'auto') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    root.classList.remove("light", "dark");
+
+    if (newTheme === "auto") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
       root.classList.add(systemTheme);
     } else {
       root.classList.add(newTheme);
     }
-    
+
     toast({
       title: "Tema diperbarui",
-      description: `Tema berhasil diubah ke ${newTheme === 'auto' ? 'otomatis' : newTheme === 'dark' ? 'gelap' : 'terang'}`,
+      description: `Tema berhasil diubah ke ${
+        newTheme === "auto"
+          ? "otomatis"
+          : newTheme === "dark"
+          ? "gelap"
+          : "terang"
+      }`,
     });
   };
 
   const clearLastReadVerse = () => {
     setLastReadVerse(null);
-    localStorage.removeItem('last_read_verse');
+    localStorage.removeItem("last_read_verse");
     toast({
       title: "Riwayat dibersihkan",
       description: "Ayat terakhir dibaca telah dihapus",
@@ -113,26 +144,26 @@ export const SettingsPage = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <Button
-              variant={theme === 'light' ? 'default' : 'outline'}
-              onClick={() => handleThemeChange('light')}
+              variant={theme === "light" ? "default" : "outline"}
+              onClick={() => handleThemeChange("light")}
               className="flex flex-col items-center space-y-2 h-auto py-4"
             >
               <Sun className="w-5 h-5" />
               <span className="text-xs">Terang</span>
             </Button>
-            
+
             <Button
-              variant={theme === 'dark' ? 'default' : 'outline'}
-              onClick={() => handleThemeChange('dark')}
+              variant={theme === "dark" ? "default" : "outline"}
+              onClick={() => handleThemeChange("dark")}
               className="flex flex-col items-center space-y-2 h-auto py-4"
             >
               <Moon className="w-5 h-5" />
               <span className="text-xs">Gelap</span>
             </Button>
-            
+
             <Button
-              variant={theme === 'auto' ? 'default' : 'outline'}
-              onClick={() => handleThemeChange('auto')}
+              variant={theme === "auto" ? "default" : "outline"}
+              onClick={() => handleThemeChange("auto")}
               className="flex flex-col items-center space-y-2 h-auto py-4"
             >
               <Monitor className="w-5 h-5" />
@@ -163,7 +194,7 @@ export const SettingsPage = () => {
             </div>
             <Switch
               checked={preferences.showTranslation}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 updatePreferences({ showTranslation: checked })
               }
             />
@@ -174,14 +205,22 @@ export const SettingsPage = () => {
           <div className="space-y-3">
             <p className="font-medium">Ukuran Font Arab</p>
             <div className="grid grid-cols-3 gap-2">
-              {['small', 'medium', 'large'].map((size) => (
+              {["small", "medium", "large"].map((size) => (
                 <Button
                   key={size}
-                  variant={preferences.arabicFontSize === size ? 'default' : 'outline'}
+                  variant={
+                    preferences.arabicFontSize === size ? "default" : "outline"
+                  }
                   size="sm"
-                  onClick={() => updatePreferences({ arabicFontSize: size as any })}
+                  onClick={() =>
+                    updatePreferences({ arabicFontSize: size as any })
+                  }
                 >
-                  {size === 'small' ? 'Kecil' : size === 'medium' ? 'Sedang' : 'Besar'}
+                  {size === "small"
+                    ? "Kecil"
+                    : size === "medium"
+                    ? "Sedang"
+                    : "Besar"}
                 </Button>
               ))}
             </div>
@@ -190,17 +229,48 @@ export const SettingsPage = () => {
           <div className="space-y-3">
             <p className="font-medium">Ukuran Font Terjemahan</p>
             <div className="grid grid-cols-3 gap-2">
-              {['small', 'medium', 'large'].map((size) => (
+              {["small", "medium", "large"].map((size) => (
                 <Button
                   key={size}
-                  variant={preferences.translationFontSize === size ? 'default' : 'outline'}
+                  variant={
+                    preferences.translationFontSize === size
+                      ? "default"
+                      : "outline"
+                  }
                   size="sm"
-                  onClick={() => updatePreferences({ translationFontSize: size as any })}
+                  onClick={() =>
+                    updatePreferences({ translationFontSize: size as any })
+                  }
                 >
-                  {size === 'small' ? 'Kecil' : size === 'medium' ? 'Sedang' : 'Besar'}
+                  {size === "small"
+                    ? "Kecil"
+                    : size === "medium"
+                    ? "Sedang"
+                    : "Besar"}
                 </Button>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="font-medium">Pilihan Qori (Pembaca)</p>
+            <Select
+              value={preferences.selectedQari}
+              onValueChange={(value) =>
+                updatePreferences({ selectedQari: value as Qari })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih Qori" />
+              </SelectTrigger>
+              <SelectContent>
+                {QARIS.map((qari) => (
+                  <SelectItem key={qari} value={qari}>
+                    {qari.charAt(0).toUpperCase() + qari.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button
@@ -223,7 +293,7 @@ export const SettingsPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div 
+            <div
               className="p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
               onClick={goToLastRead}
             >
@@ -234,7 +304,7 @@ export const SettingsPage = () => {
                 Ketuk untuk lanjut membaca
               </p>
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -258,9 +328,7 @@ export const SettingsPage = () => {
             </div>
             <Badge variant="secondary">{bookmarks.length}</Badge>
           </CardTitle>
-          <CardDescription>
-            Ayat yang telah Anda simpan
-          </CardDescription>
+          <CardDescription>Ayat yang telah Anda simpan</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {bookmarks.length === 0 ? (
@@ -285,7 +353,7 @@ export const SettingsPage = () => {
                   </p>
                 </div>
               ))}
-              
+
               {bookmarks.length > 5 && (
                 <p className="text-center text-sm text-muted-foreground">
                   Dan {bookmarks.length - 5} ayat lainnya

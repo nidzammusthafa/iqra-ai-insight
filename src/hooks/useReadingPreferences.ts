@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ReadingPreferences, TranslationId } from '@/types/quran';
+import { ReadingPreferences, TranslationId, Qari } from '@/types/quran';
 
 const DEFAULT_PREFERENCES: ReadingPreferences = {
   arabicFontSize: 'medium',
@@ -7,7 +7,8 @@ const DEFAULT_PREFERENCES: ReadingPreferences = {
   showTranslation: true,
   defaultTranslation: TranslationId.ID,
   lineSpacing: 'normal',
-  theme: 'auto'
+  theme: 'auto',
+  selectedQari: 'alafasy',
 };
 
 export const useReadingPreferences = () => {

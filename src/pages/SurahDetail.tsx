@@ -9,6 +9,7 @@ import { ArrowLeft, Book, ChevronLeft, ChevronRight, Maximize, Minimize } from "
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFocusMode } from "@/hooks/useFocusModeHook";
+import { SingleSurahResponse } from "@/types/quran";
 
 export const SurahDetail = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
@@ -16,12 +17,13 @@ export const SurahDetail = () => {
   const { toast } = useToast();
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const [swipeDistance, setSwipeDistance] = useState(0);
+  const [playingVerse, setPlayingVerse] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isFocusMode, setIsFocusMode } = useFocusMode();
   
   const surahNum = parseInt(surahNumber || "1");
 
-  const { data: surah, isLoading, error } = useQuery({
+  const { data: surah, isLoading, error } = useQuery<SingleSurahResponse>({
     queryKey: ["surah", surahNum],
     queryFn: () => quranApi.getSuratDetail(surahNum),
     enabled: !!surahNum && surahNum >= 1 && surahNum <= 114,
@@ -175,12 +177,9 @@ export const SurahDetail = () => {
                       {surah.name}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      {surah.name_translations.id} • {surah.number_of_ayah} ayat
+                      {surah.translation} • {surah.numberOfAyahs} ayat
                     </p>
                   </div>
-                  <span className="arabic-small text-primary font-bold">
-                    {surah.name_translations.ar}
-                  </span>
                 </div>
               </div>
             ) : (
@@ -252,37 +251,39 @@ export const SurahDetail = () => {
                 </div>
                 
                 <h2 className="arabic-large font-bold">
-                  {surah.name_translations.ar}
+                  {surah.name}
                 </h2>
                 
                 <div className="text-primary-foreground/80 text-sm space-y-1">
-                  <p>{surah.name_translations.id}</p>
-                  <p>{surah.number_of_ayah} ayat • {surah.type}</p>
-                  {surah.place && <p>Diturunkan di {surah.place}</p>}
+                  <p>{surah.translation}</p>
+                  <p>{surah.numberOfAyahs} ayat • {surah.revelation}</p>
+                  {surah.description && <p className="text-xs pt-2">{surah.description}</p>}
                 </div>
               </div>
             </div>
 
             {/* Bismillah for non-Fatiha and non-Tawbah */}
-            {surahNum !== 1 && surahNum !== 9 && (
+            {surah.number !== 1 && surah.number !== 9 && surah.bismillah && (
               <div className="verse-card text-center">
                 <div className="arabic-large text-primary font-bold">
-                  بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+                  {surah.bismillah.arab}
                 </div>
                 <p className="text-muted-foreground text-sm mt-2">
-                  Dengan menyebut nama Allah Yang Maha Pemurah lagi Maha Penyayang
+                  {surah.bismillah.translation}
                 </p>
               </div>
             )}
 
             {/* Verses */}
             <div className="space-y-4">
-              {surah.verses.map((verse) => (
-                <div key={verse.number} id={`verse-${verse.number}`}>
+              {(surah.ayahs || surah.verses).map((verse) => (
+                <div key={verse.number.inSurah} id={`verse-${verse.number.inSurah}`}>
                   <VerseCard
                     verse={verse}
-                    surahNumber={surah.number_of_surah}
+                    surahNumber={surah.number}
                     surahName={surah.name}
+                    playingVerse={playingVerse}
+                    setPlayingVerse={setPlayingVerse}
                   />
                 </div>
               ))}

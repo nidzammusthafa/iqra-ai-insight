@@ -11,15 +11,27 @@ export type Recitation = {
   audio_url: string;
 };
 
-// Representasi ayat
+// Representasi ayat (NEW STRUCTURE)
 export type Verse = {
-  number: number;
-  text: string;
-  translation_en?: string;
-  translation_id?: string;
+  number: { inQuran: number; inSurah: number };
+  arab: string;
+  translation: string;
+  audio: { [key: string]: string };
+  text?: string; // for fallback
+  translation_id?: string; // for fallback
 };
 
-// Response umum untuk daftar surat
+export type SurahListItem = {
+  number: number;
+  numberOfAyahs: number;
+  name: string;
+  translation: string;
+  revelation: string;
+  description: string;
+  audio: string;
+};
+
+// Response umum untuk daftar surat (OLD API)
 export type SuratResponse = {
   name: string;
   name_translations: NameTranslation;
@@ -30,6 +42,36 @@ export type SuratResponse = {
   type?: string;
   url?: string;
 };
+
+// Response detail 1 surat (NEW API)
+export type SingleSurahResponse = {
+  number: number;
+  numberOfAyahs: number;
+  name: string;
+  translation: string;
+  revelation: string;
+  description: string;
+  audio: string;
+  bismillah: {
+    arab: string;
+    translation: string;
+    audio: { [key: string]: string };
+  };
+  ayahs: Verse[];
+  // for fallback from old OneSuratResponse
+  verses?: Verse[]; 
+  name_translations?: NameTranslation;
+  number_of_ayah?: number;
+  number_of_surah?: number;
+};
+
+// Old response detail, kept for reference or other parts of app
+export interface OneSuratResponse extends SuratResponse {
+  recitations: Recitation[];
+  type: string;
+  verses: Verse[];
+  tafsir: TafsirID;
+}
 
 // Struktur tafsir
 export type TafsirText = {
@@ -47,14 +89,6 @@ export type TafsirID = {
     kemenag: TafsirSource;
   };
 };
-
-// Response detail 1 surat
-export interface OneSuratResponse extends SuratResponse {
-  recitations: Recitation[];
-  type: string;
-  verses: Verse[];
-  tafsir: TafsirID;
-}
 
 // Response ayat tunggal
 export type GetAyatResponse = {
@@ -113,6 +147,17 @@ export type VerseInsight = {
   key_themes?: string[];
 };
 
+export const QARIS = [
+  "alafasy",
+  "ahmedajamy",
+  "husarymujawwad",
+  "minshawi",
+  "muhammadayyoub",
+  "muhammadjibreel",
+] as const;
+
+export type Qari = typeof QARIS[number];
+
 // Reading preferences
 export type ReadingPreferences = {
   arabicFontSize: 'small' | 'medium' | 'large' | 'xl';
@@ -121,6 +166,7 @@ export type ReadingPreferences = {
   defaultTranslation: TranslationId;
   lineSpacing: 'compact' | 'normal' | 'relaxed';
   theme: 'light' | 'dark' | 'auto';
+  selectedQari: Qari;
 };
 
 // Bookmark types
