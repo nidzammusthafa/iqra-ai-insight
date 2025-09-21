@@ -45,21 +45,21 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bottom-nav">
-        <div className="flex justify-around items-center py-2 px-4">
+      <nav className="bottom-nav animate-slide-in-right backdrop-blur-md bg-card/95 shadow-lg">
+        <div className="flex justify-around items-center py-2 px-4 animate-fade-in">
           {navItems.map((item) => {
             const isActive = item.activePattern.test(location.pathname);
             const Icon = item.icon;
             
             return (
-              <Link
+                <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center justify-center py-2 px-4 rounded-lg transition-all duration-200",
+                  "flex flex-col items-center justify-center py-2 px-4 rounded-lg transition-all duration-300 hover-scale",
                   isActive 
-                    ? "text-primary bg-primary-light" 
-                    : "text-muted-foreground hover:text-primary hover:bg-accent"
+                    ? "text-primary bg-primary-light animate-scale-in shadow-sm" 
+                    : "text-muted-foreground hover:text-primary hover:bg-accent/80 hover:shadow-sm"
                 )}
               >
                 <Icon 

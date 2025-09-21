@@ -48,6 +48,20 @@ export const SurahDetail = () => {
     }
   }, [surah, surahNum]);
 
+  // Sticky header scroll effect
+  useEffect(() => {
+    const header = containerRef.current?.querySelector('.sticky-header');
+    if (!header) return;
+
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 50;
+      header.classList.toggle('scrolled', scrolled);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Swipe navigation handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setSwipeStart(e.touches[0].clientX);
@@ -139,8 +153,8 @@ export const SurahDetail = () => {
       onTouchEnd={handleTouchEnd}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="p-4 flex items-center space-x-3">
+      <div className="sticky-header animate-fade-in">
+        <div className="p-4 flex items-center space-x-3 animate-slide-in-right">
           <Button
             variant="ghost"
             size="sm"
@@ -195,8 +209,8 @@ export const SurahDetail = () => {
 
         {/* Swipe indicator */}
         {Math.abs(swipeDistance) > 50 && (
-          <div className="absolute top-full left-0 right-0 bg-primary/10 p-2 text-center">
-            <p className="text-sm text-primary">
+          <div className="absolute top-full left-0 right-0 bg-primary/10 backdrop-blur-sm p-2 text-center animate-slide-in-right border-b border-primary/20">
+            <p className="text-sm text-primary font-medium animate-fade-in">
               {swipeDistance > 0 
                 ? `← Surah sebelumnya ${surahNum > 1 ? `(${surahNum - 1})` : ''}` 
                 : `Surah selanjutnya → ${surahNum < 114 ? `(${surahNum + 1})` : ''}`
