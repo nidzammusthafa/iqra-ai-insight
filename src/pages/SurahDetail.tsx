@@ -5,9 +5,10 @@ import { quranApi } from "@/services/quranApi";
 import { VerseCard } from "@/components/quran/VerseCard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Book, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Book, ChevronLeft, ChevronRight, Maximize, Minimize } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useFocusMode } from "@/hooks/useFocusModeHook";
 
 export const SurahDetail = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
@@ -16,6 +17,7 @@ export const SurahDetail = () => {
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const [swipeDistance, setSwipeDistance] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { isFocusMode, setIsFocusMode } = useFocusMode();
   
   const surahNum = parseInt(surahNumber || "1");
 
@@ -153,72 +155,84 @@ export const SurahDetail = () => {
       onTouchEnd={handleTouchEnd}
     >
       {/* Header */}
-      <div className="sticky-header animate-fade-in">
-        <div className="p-4 flex items-center space-x-3 animate-slide-in-right">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/")}
-            className="text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
-          {surah ? (
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h1 className="font-semibold text-foreground text-lg">
-                    {surah.name}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    {surah.name_translations.id} • {surah.number_of_ayah} ayat
-                  </p>
+      {!isFocusMode && (
+        <div className="sticky-header animate-fade-in">
+          <div className="p-4 flex items-center space-x-3 animate-slide-in-right">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            
+            {surah ? (
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h1 className="font-semibold text-foreground text-lg">
+                      {surah.name}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      {surah.name_translations.id} • {surah.number_of_ayah} ayat
+                    </p>
+                  </div>
+                  <span className="arabic-small text-primary font-bold">
+                    {surah.name_translations.ar}
+                  </span>
                 </div>
-                <span className="arabic-small text-primary font-bold">
-                  {surah.name_translations.ar}
-                </span>
               </div>
+            ) : (
+              <LoadingSpinner size="sm" />
+            )}
+
+            {/* Navigation buttons */}
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToPreviousSurah}
+                disabled={surahNum <= 1}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToNextSurah}
+                disabled={surahNum >= 114}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
             </div>
-          ) : (
-            <LoadingSpinner size="sm" />
+          </div>
+
+          {/* Swipe indicator */}
+          {Math.abs(swipeDistance) > 50 && (
+            <div className="absolute top-full left-0 right-0 bg-primary/10 backdrop-blur-sm p-2 text-center animate-slide-in-right border-b border-primary/20">
+              <p className="text-sm text-primary font-medium animate-fade-in">
+                {swipeDistance > 0 
+                  ? `← Surah sebelumnya ${surahNum > 1 ? `(${surahNum - 1})` : ''}` 
+                  : `Surah selanjutnya → ${surahNum < 114 ? `(${surahNum + 1})` : ''}`
+                }
+              </p>
+            </div>
           )}
-
-          {/* Navigation buttons */}
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToPreviousSurah}
-              disabled={surahNum <= 1}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToNextSurah}
-              disabled={surahNum >= 114}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </div>
         </div>
+      )}
 
-        {/* Swipe indicator */}
-        {Math.abs(swipeDistance) > 50 && (
-          <div className="absolute top-full left-0 right-0 bg-primary/10 backdrop-blur-sm p-2 text-center animate-slide-in-right border-b border-primary/20">
-            <p className="text-sm text-primary font-medium animate-fade-in">
-              {swipeDistance > 0 
-                ? `← Surah sebelumnya ${surahNum > 1 ? `(${surahNum - 1})` : ''}` 
-                : `Surah selanjutnya → ${surahNum < 114 ? `(${surahNum + 1})` : ''}`
-              }
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Focus Mode Toggle Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setIsFocusMode(!isFocusMode)}
+        className="fixed bottom-4 right-4 z-50 rounded-full shadow-lg"
+      >
+        {isFocusMode ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+      </Button>
 
       {/* Content */}
       <div className="p-4">

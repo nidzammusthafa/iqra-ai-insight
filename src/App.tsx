@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import FocusModeProvider from "@/hooks/FocusModeProvider";
 import { MobileLayout } from "./components/layout/MobileLayout";
 import { QuranHome } from "./pages/QuranHome";
 import { SurahDetail } from "./pages/SurahDetail";
@@ -21,19 +22,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <MobileLayout>
-          <Routes>
-            <Route path="/" element={<QuranHome />} />
-            <Route path="/surah/:surahNumber" element={<SurahDetail />} />
-            <Route path="/hadits" element={<HaditsHome />} />
-            <Route path="/hadits/:rawi" element={<HadithList />} />
-            <Route path="/hadits/:rawi/:haditsNumber" element={<HadithDetail />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </MobileLayout>
+        <FocusModeProvider>
+          <MobileLayout>
+            <Routes>
+              <Route path="/" element={<QuranHome />} />
+              <Route path="/surah/:surahNumber" element={<SurahDetail />} />
+              <Route path="/hadits" element={<HaditsHome />} />
+              <Route path="/hadits/:rawi" element={<HadithList />} />
+              <Route path="/hadits/:rawi/:haditsNumber" element={<HadithDetail />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </MobileLayout>
+        </FocusModeProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

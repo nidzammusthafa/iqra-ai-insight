@@ -140,6 +140,16 @@ export const GeminiApiKeyDialog = ({
           {/* How to get API Key */}
           <div className="text-sm text-muted-foreground space-y-2">
             <p className="font-medium">Cara mendapatkan API key:</p>
+            <p className="text-xs pb-2">
+              <a
+                href="https://youtube.com/shorts/gimu4UFFMnM?si=U7psMImQAN4gsVh6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                Tonton video tutorial singkat di sini
+              </a>
+            </p>
             <ol className="list-decimal list-inside space-y-1 text-xs">
               <li>Buka Google AI Studio</li>
               <li>Login dengan akun Google</li>

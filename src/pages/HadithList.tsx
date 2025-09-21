@@ -141,7 +141,7 @@ export const HadithList = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen max-w-screen overflow-x-hidden mx-auto">
       <div className="sticky-header animate-fade-in">
         <div className="p-4 flex items-center space-x-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/hadits")}>
