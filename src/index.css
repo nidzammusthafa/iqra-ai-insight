@@ -48,6 +48,11 @@
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 142 76% 36%;
+
+    /* Prayer time specific colors */
+    --prayer-active: 145 85% 35%;
+    --prayer-next: 45 85% 65%;
+    --prayer-past: 160 8% 65%;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 45%));

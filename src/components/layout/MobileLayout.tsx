@@ -6,6 +6,7 @@ import { useFocusMode } from "@/hooks/useFocusModeHook";
 import { FloatingActionMenu } from "./FloatingActionMenu";
 import { SettingsSheet } from "@/components/settings/SettingsSheet";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
+import { useAdhanNotifications } from "@/hooks/useAdhanNotifications";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -36,6 +37,9 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   const location = useLocation();
   const { isFocusMode, setIsFocusMode } = useFocusMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Run adhan notification hook globally
+  useAdhanNotifications();
 
   return (
     <div className="mobile-container">

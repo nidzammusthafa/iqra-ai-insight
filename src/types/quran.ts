@@ -204,6 +204,19 @@ export type ReadingPreferences = {
   isAutoplayEnabled: boolean;
   autoplayDelay: number; // in seconds
   playbackSpeed: number; // e.g., 1, 1.25, 1.5
+  prayerNotifications: PrayerNotifications;
+};
+
+// Prayer time notification preferences
+export type PrayerNotifications = {
+  isEnabled: boolean;
+  fajr: boolean;
+  dhuhr: boolean;
+  asr: boolean;
+  maghrib: boolean;
+  isha: boolean;
+  disableDhuhrOnFridays: boolean;
+  fajrAdhan: 'madinah' | 'merdu';
 };
 
 // Bookmark types

@@ -13,6 +13,16 @@ const DEFAULT_PREFERENCES: ReadingPreferences = {
   isAutoplayEnabled: false,
   autoplayDelay: 2, // default 2 seconds
   playbackSpeed: 1,
+  prayerNotifications: {
+    isEnabled: false,
+    fajr: true,
+    dhuhr: true,
+    asr: true,
+    maghrib: true,
+    isha: true,
+    disableDhuhrOnFridays: true,
+    fajrAdhan: 'madinah',
+  },
 };
 
 export const useReadingPreferences = () => {

@@ -334,6 +334,115 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               </CardContent>
             </Card>
 
+            {/* Prayer Time Notifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <PlayCircle className="w-5 h-5" />
+                  <span>Notifikasi Waktu Sholat</span>
+                </CardTitle>
+                <CardDescription>
+                  Atur notifikasi adzan untuk pengingat waktu sholat.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Aktifkan Notifikasi Adzan</p>
+                    <p className="text-sm text-muted-foreground">
+                      Nyalakan untuk menerima notifikasi adzan.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={preferences.prayerNotifications.isEnabled}
+                    onCheckedChange={(checked) =>
+                      updatePreferences({
+                        prayerNotifications: {
+                          ...preferences.prayerNotifications,
+                          isEnabled: checked,
+                        },
+                      })
+                    }
+                  />
+                </div>
+                {preferences.prayerNotifications.isEnabled && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <p className="font-medium">Waktu Sholat</p>
+                      {["fajr", "dhuhr", "asr", "maghrib", "isha"].map(
+                        (prayer) => (
+                          <div
+                            key={prayer}
+                            className="flex items-center justify-between"
+                          >
+                            <p className="capitalize">{prayer}</p>
+                            <Switch
+                              checked={
+                                !!preferences.prayerNotifications[
+                                  prayer as keyof typeof preferences.prayerNotifications
+                                ]
+                              }
+                              onCheckedChange={(checked) =>
+                                updatePreferences({
+                                  prayerNotifications: {
+                                    ...preferences.prayerNotifications,
+                                    [prayer]: checked,
+                                  },
+                                })
+                              }
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium">
+                        Nonaktifkan Adzan Dzuhur di Hari Jumat
+                      </p>
+                      <Switch
+                        checked={
+                          preferences.prayerNotifications.disableDhuhrOnFridays
+                        }
+                        onCheckedChange={(checked) =>
+                          updatePreferences({
+                            prayerNotifications: {
+                              ...preferences.prayerNotifications,
+                              disableDhuhrOnFridays: checked,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <Separator />
+                    <div className="space-y-3">
+                      <p className="font-medium">Pilihan Adzan Subuh</p>
+                      <Select
+                        value={preferences.prayerNotifications.fajrAdhan}
+                        onValueChange={(value) =>
+                          updatePreferences({
+                            prayerNotifications: {
+                              ...preferences.prayerNotifications,
+                              fajrAdhan: value as "madinah" | "merdu",
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Adzan Subuh" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="madinah">Madinah</SelectItem>
+                          <SelectItem value="merdu">Merdu</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Last Read Verse */}
             {lastReadVerse && (
               <Card>

@@ -142,6 +142,14 @@ export default {
         "slide-out-right": {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(100%)" }
+        },
+        "pulse-gold": {
+          "0%, 100%": {
+            boxShadow: "0 0 0 0 hsl(45 85% 65% / 0.7)",
+          },
+          "50%": {
+            boxShadow: "0 0 0 8px hsl(45 85% 65% / 0)",
+          },
         }
       },
       animation: {
@@ -153,6 +161,7 @@ export default {
         "scale-out": "scale-out 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-out-right": "slide-out-right 0.3s ease-out",
+        "pulse-gold": "pulse-gold 2s infinite",
       },
     },
   },
