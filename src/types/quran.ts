@@ -102,8 +102,10 @@ export type GetAyatResponse = {
 export type SearchResult = {
   name?: string;
   number?: number;
+  number_of_surah?: number;
   translation?: string;
   numberOfAyahs?: number;
+  number_of_ayah?: number;
   name_translations?: NameTranslation;
   verses?: Array<{
     number?: number;
@@ -111,6 +113,22 @@ export type SearchResult = {
     translation_id?: string;
   }>;
   url?: string;
+};
+
+// Tipe untuk hasil pencarian dengan struktur yang berbeda
+export type SearchVerseResult = SearchResult & {
+  number_of_surah: number;
+  number_of_ayah: number;
+  verses: Array<{
+    number: number;
+    text: string;
+    translation_id: string;
+  }>;
+};
+
+export type SearchSurahResult = SearchResult & {
+  number_of_surah: number;
+  number_of_ayah: number;
 };
 
 // Pilihan bahasa terjemahan

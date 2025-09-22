@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { quranApi } from "@/services/quranApi";
 import * as geminiApi from "@/services/geminiApi";
-import { SurahListItem, TranslationId, SearchResult } from "@/types/quran";
+import { SurahListItem, TranslationId, SearchResult, SearchVerseResult, SearchSurahResult } from "@/types/quran";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,24 @@ export const SearchPage = () => {
       }
     },
     enabled: hasSearched && searchTerm.length > 2,
+    // Normalisasi data hasil pencarian
+    select: (data) => {
+      if (!data || !Array.isArray(data)) return [];
+      
+      return data.map(item => {
+        // Pastikan properti yang diperlukan ada
+        return {
+          ...item,
+          number: item.number || item.number_of_surah,
+          numberOfAyahs: item.numberOfAyahs || item.number_of_ayah,
+          name_translations: item.name_translations || {
+            id: item.translation || '',
+            en: item.name || '',
+            ar: item.name_translations?.ar || ''
+          }
+        };
+      });
+    }
   });
 
   const { data: allSurahs } = useQuery<SurahListItem[]>({
@@ -62,8 +80,13 @@ export const SearchPage = () => {
 
   // Fungsi utilitas untuk memvalidasi hasil pencarian
   const isValidSurahNumber = (number: any): number | null => {
-    if (typeof number === 'number' && number > 0 && number <= 114) {
-      return number;
+    // Tangani objek dengan properti number_of_surah
+    const surahNumber = typeof number === 'object' && number !== null ? 
+      (number.number_of_surah || number.number) : 
+      number;
+      
+    if (typeof surahNumber === 'number' && surahNumber > 0 && surahNumber <= 114) {
+      return surahNumber;
     }
     return null;
   };
@@ -73,6 +96,16 @@ export const SearchPage = () => {
       return number;
     }
     return null;
+  };
+
+  // Fungsi untuk mendapatkan nomor surah dari hasil pencarian
+  const getSurahNumber = (result: SearchResult): number | undefined => {
+    return result.number_of_surah || result.number;
+  };
+
+  // Fungsi untuk mendapatkan nomor ayat dari hasil pencarian
+  const getVerseNumber = (verse: any): number | undefined => {
+    return verse?.number;
   };
 
   useEffect(() => {
@@ -97,6 +130,7 @@ export const SearchPage = () => {
       return;
     }
     
+    console.log("Navigating to:", `/surah/${validSurahNumber}#verse-${validVerseNumber}`);
     navigate(`/surah/${validSurahNumber}#verse-${validVerseNumber}`);
   };
 
@@ -109,6 +143,7 @@ export const SearchPage = () => {
       return;
     }
     
+    console.log("Navigating to:", `/surah/${validSurahNumber}`);
     navigate(`/surah/${validSurahNumber}`);
   };
 
@@ -290,8 +325,8 @@ export const SearchPage = () => {
                   .filter(
                     (result) =>
                       !surahFilter ||
-                      (result.number &&
-                        result.number.toString() === surahFilter)
+                      (getSurahNumber(result) &&
+                        getSurahNumber(result)?.toString() === surahFilter)
                   )
                   .map((result, index) => {
                     const verse =
@@ -307,23 +342,29 @@ export const SearchPage = () => {
                           if (
                             (searchType === "verses" || searchType === "ai") &&
                             verse &&
-                            isValidVerseNumber(verse.number)
+                            isValidVerseNumber(getVerseNumber(verse))
                           ) {
                             // Periksa apakah nomor surah valid sebelum navigasi
-                            const validSurahNumber = isValidSurahNumber(result.number);
-                            if (validSurahNumber) {
+                            const surahNumber = getSurahNumber(result);
+                            const validSurahNumber = isValidSurahNumber(surahNumber);
+                            const verseNumber = getVerseNumber(verse);
+                            
+                            if (validSurahNumber && verseNumber) {
                               handleVerseClick(
                                 validSurahNumber,
-                                verse.number
+                                verseNumber
                               );
                             } else {
-                              console.error("Invalid surah number:", result.number);
+                              console.error("Invalid surah or verse number:", surahNumber, verseNumber);
                             }
                           } else if (
                             searchType === "surahs" &&
-                            isValidSurahNumber(result.number)
+                            isValidSurahNumber(getSurahNumber(result))
                           ) {
-                            handleSurahClick(result.number);
+                            const surahNumber = getSurahNumber(result);
+                            if (surahNumber) {
+                              handleSurahClick(surahNumber);
+                            }
                           }
                         }}
                       >
@@ -332,7 +373,7 @@ export const SearchPage = () => {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
                               <Badge variant="secondary" className="text-xs">
-                                QS. {result.name || 'Surah'} : {verse.number}
+                                QS. {result.name || 'Surah'} : {getVerseNumber(verse)}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
                                 Ketuk untuk buka
@@ -355,7 +396,7 @@ export const SearchPage = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4 flex-1">
                               <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                                {result.number}
+                                {getSurahNumber(result)}
                               </div>
 
                               <div className="flex-1">
@@ -371,7 +412,7 @@ export const SearchPage = () => {
                                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                                   <span>{result.translation}</span>
                                   <span>•</span>
-                                  <span>{result.numberOfAyahs} ayat</span>
+                                  <span>{result.numberOfAyahs || result.number_of_ayah} ayat</span>
                                 </div>
                               </div>
                             </div>
