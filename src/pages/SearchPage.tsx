@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { quranApi } from "@/services/quranApi";
 import * as geminiApi from "@/services/geminiApi";
-import { TranslationId } from "@/types/quran";
+import { SurahListItem, TranslationId } from "@/types/quran";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export const SearchPage = () => {
     enabled: hasSearched && searchTerm.length > 2,
   });
 
-  const { data: allSurahs } = useQuery({
+  const { data: allSurahs } = useQuery<SurahListItem[]>({
     queryKey: ["allSurahs"],
     queryFn: () => quranApi.getAllSurats(),
   });
@@ -199,8 +199,8 @@ export const SearchPage = () => {
                   <SelectContent>
                     {allSurahs?.map((surah) => (
                       <SelectItem
-                        key={surah.number_of_surah}
-                        value={surah.number_of_surah.toString()}
+                        key={surah.number}
+                        value={surah.number.toString()}
                       >
                         {surah.name}
                       </SelectItem>
@@ -253,8 +253,8 @@ export const SearchPage = () => {
                   .filter(
                     (result) =>
                       !surahFilter ||
-                      (result.number_of_surah &&
-                        result.number_of_surah.toString() === surahFilter)
+                      (result.number &&
+                        result.number.toString() === surahFilter)
                   )
                   .map((result, index) => {
                     const verse =
@@ -273,14 +273,14 @@ export const SearchPage = () => {
                             verse.number
                           ) {
                             handleVerseClick(
-                              result.number_of_surah,
+                              result.number,
                               verse.number
                             );
                           } else if (
                             searchType === "surahs" &&
-                            result.number_of_surah
+                            result.number
                           ) {
-                            handleSurahClick(result.number_of_surah);
+                            handleSurahClick(result.number);
                           }
                         }}
                       >
@@ -312,7 +312,7 @@ export const SearchPage = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4 flex-1">
                               <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                                {result.number_of_surah}
+                                {result.number}
                               </div>
 
                               <div className="flex-1">
@@ -326,9 +326,9 @@ export const SearchPage = () => {
                                 </div>
 
                                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                  <span>{result.name_translations?.id}</span>
+                                  <span>{result.translation}</span>
                                   <span>•</span>
-                                  <span>{result.number_of_ayah} ayat</span>
+                                  <span>{result.numberOfAyahs} ayat</span>
                                 </div>
                               </div>
                             </div>
