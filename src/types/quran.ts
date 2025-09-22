@@ -163,6 +163,7 @@ export type ReadingPreferences = {
   arabicFontSize: 'small' | 'medium' | 'large' | 'xl';
   translationFontSize: 'small' | 'medium' | 'large';
   showTranslation: boolean;
+  showVerseActionButtons: boolean;
   defaultTranslation: TranslationId;
   lineSpacing: 'compact' | 'normal' | 'relaxed';
   theme: 'light' | 'dark' | 'auto';

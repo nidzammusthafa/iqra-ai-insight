@@ -3,13 +3,7 @@ import { Verse } from "@/types/quran";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
+  Copy,
   Eye,
   EyeOff,
   Lightbulb,
@@ -18,8 +12,6 @@ import {
   BookmarkCheck,
   Play,
   Pause,
-  Copy,
-  BookOpenCheck,
 } from "lucide-react";
 import { AIInsightPanel } from "./AIInsightPanel";
 import { BookmarkDialog } from "../dialogs/BookmarkDialog";
@@ -54,13 +46,13 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
   const isCurrentlyBookmarked = isBookmarked(surahNumber, verseNumber);
   const existingBookmark = getBookmark(surahNumber, verseNumber);
 
-  const fullVerseText = `${verseText}\n\n${verseTranslation}\n\nQS. ${surahName} (${surahNumber}):${verseNumber}`;
+  const textToCopy = `${verseText}\n\n${verseTranslation}\n\nQS. ${surahName} (${surahNumber}):${verseNumber}`;
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
         title: `QS. ${surahName} ${surahNumber}:${verseNumber}`,
-        text: fullVerseText,
+        text: textToCopy,
       });
     } else {
       handleCopy();
@@ -68,7 +60,7 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(fullVerseText);
+    navigator.clipboard.writeText(textToCopy);
     toast({
       title: "Ayat disalin",
       description: "Teks ayat dan terjemahan telah disalin.",
@@ -132,25 +124,74 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div 
-          ref={ref}
-          id={`verse-${verseNumber}`}
-          className={cn(
-            "verse-card space-y-4 p-4 rounded-lg transition-colors duration-300 relative",
-            isPlaying && "bg-primary-light/50",
-            className
-          )}
-        >
-          {/* Verse number badge */}
+    <div 
+      ref={ref}
+      id={`verse-${verseNumber}`}
+      className={cn(
+        "verse-card space-y-4 p-4 rounded-lg transition-colors duration-300",
+        isPlaying && "bg-primary-light/50",
+        className
+      )}
+    >
+      {preferences.showVerseActionButtons ? (
+        // "Classic" Layout with action buttons
+        <>
           <div className="flex items-center justify-between">
             <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center">
               <span className="text-primary font-bold text-sm">{verseNumber}</span>
             </div>
-          </div>
 
-          {/* Arabic text */}
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => updatePreferences({ showTranslation: !preferences.showTranslation })}
+                className="text-muted-foreground hover:text-primary"
+              >
+                {preferences.showTranslation ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onPlay}
+                className={cn("text-muted-foreground hover:text-primary", isPlaying && "text-primary")}
+              >
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBookmarkToggle}
+                className={cn("text-muted-foreground hover:text-primary", isCurrentlyBookmarked && "text-primary")}
+              >
+                {isCurrentlyBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAIInsights(!showAIInsights)}
+                className={cn("text-muted-foreground hover:text-primary", showAIInsights && "text-primary bg-primary-light")}
+              >
+                <Lightbulb className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Share className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
           <div
             className={cn(
               "arabic-text text-right text-foreground",
@@ -160,65 +201,39 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
           >
             {verseText}
           </div>
-
-          {/* Translation */}
-          {preferences.showTranslation && verseTranslation && (
-            <div
-              className={cn(
-                "text-muted-foreground border-l-2 border-primary-light pl-4",
-                getTranslationFontClass(),
-                getLineSpacingClass()
-              )}
-            >
-              {verseTranslation}
-            </div>
-          )}
+        </>
+      ) : (
+        // "Clean" Layout without action buttons
+        <div className="flex flex-row-reverse items-start gap-x-4">
+          <div
+            className={cn(
+              "arabic-text flex-grow text-right text-foreground",
+              getArabicFontClass(),
+              getLineSpacingClass()
+            )}
+          >
+            {verseText}
+          </div>
+          <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
+            <span className="text-primary font-bold text-sm">{verseNumber}</span>
+          </div>
         </div>
-      </DropdownMenuTrigger>
+      )}
 
-      <DropdownMenuContent className="w-64">
-        <DropdownMenuItem onClick={onPlay}>
-          {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-          <span>{isPlaying ? "Jeda" : "Putar Audio"}</span>
-        </DropdownMenuItem>
+      {/* Translation (common for both layouts) */}
+      {preferences.showTranslation && verseTranslation && (
+        <div
+          className={cn(
+            "text-muted-foreground border-l-2 border-primary-light pl-4",
+            getTranslationFontClass(),
+            getLineSpacingClass()
+          )}
+        >
+          {verseTranslation}
+        </div>
+      )}
 
-        <DropdownMenuItem onClick={handleBookmarkToggle}>
-          {isCurrentlyBookmarked ? <BookmarkCheck className="mr-2 h-4 w-4" /> : <Bookmark className="mr-2 h-4 w-4" />}
-          <span>{isCurrentlyBookmarked ? "Hapus Bookmark" : "Bookmark Ayat"}</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem onClick={() => setShowAIInsights(true)}>
-          <Lightbulb className="mr-2 h-4 w-4" />
-          <span>AI Insight</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem onClick={handleShare}>
-          <Share className="mr-2 h-4 w-4" />
-          <span>Bagikan</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem onClick={handleCopy}>
-          <Copy className="mr-2 h-4 w-4" />
-          <span>Salin Teks</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator />
-
-        <DropdownMenuItem onClick={() => updatePreferences({ showTranslation: !preferences.showTranslation })}>
-          {preferences.showTranslation ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-          <span>{preferences.showTranslation ? "Sembunyikan Terjemahan" : "Tampilkan Terjemahan"}</span>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem disabled>
-            <BookOpenCheck className="mr-2 h-4 w-4" />
-            <span>Lihat Tafsir</span>
-        </DropdownMenuItem>
-
-      </DropdownMenuContent>
-
-      {/* AI Insights Panel & Bookmark Dialog are kept outside the trigger to avoid layout shifts */}
+      {/* AI Insights Panel & Bookmark Dialog (common for both layouts) */}
       {showAIInsights && (
         <AIInsightPanel
           surahNumber={surahNumber}
@@ -240,7 +255,7 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
         existingBookmark={existingBookmark}
         onSave={handleBookmarkSave}
       />
-    </DropdownMenu>
+    </div>
   );
 });
 

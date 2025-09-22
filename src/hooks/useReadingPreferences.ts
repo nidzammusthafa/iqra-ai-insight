@@ -5,6 +5,7 @@ const DEFAULT_PREFERENCES: ReadingPreferences = {
   arabicFontSize: 'medium',
   translationFontSize: 'medium',
   showTranslation: true,
+  showVerseActionButtons: true,
   defaultTranslation: TranslationId.ID,
   lineSpacing: 'normal',
   theme: 'auto',

@@ -185,6 +185,21 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
+                    <p className="font-medium">Tampilkan Tombol Aksi Ayat</p>
+                    <p className="text-sm text-muted-foreground">
+                      Tampilkan tombol putar, bookmark, dll. di setiap ayat.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={preferences.showVerseActionButtons}
+                    onCheckedChange={(checked) =>
+                      updatePreferences({ showVerseActionButtons: checked })
+                    }
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
                     <p className="font-medium">Tampilkan Terjemahan</p>
                     <p className="text-sm text-muted-foreground">
                       Tunjukkan terjemahan ayat secara default
