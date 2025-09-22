@@ -98,6 +98,21 @@ export type GetAyatResponse = {
   translation_id: string;
 };
 
+// Tipe untuk hasil pencarian ayat
+export type SearchResult = {
+  name?: string;
+  number?: number;
+  translation?: string;
+  numberOfAyahs?: number;
+  name_translations?: NameTranslation;
+  verses?: Array<{
+    number?: number;
+    text?: string;
+    translation_id?: string;
+  }>;
+  url?: string;
+};
+
 // Pilihan bahasa terjemahan
 export enum TranslationId {
   AR = "ar",

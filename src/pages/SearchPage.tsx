@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { quranApi } from "@/services/quranApi";
 import * as geminiApi from "@/services/geminiApi";
-import { SurahListItem, TranslationId } from "@/types/quran";
+import { SurahListItem, TranslationId, SearchResult } from "@/types/quran";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export const SearchPage = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
 
-  const { data: searchResults, isLoading } = useQuery({
+  const { data: searchResults, isLoading } = useQuery<SearchResult[]>({
     queryKey: [
       "search",
       searchTerm,
@@ -60,6 +60,21 @@ export const SearchPage = () => {
     queryFn: () => quranApi.getAllSurats(),
   });
 
+  // Fungsi utilitas untuk memvalidasi hasil pencarian
+  const isValidSurahNumber = (number: any): number | null => {
+    if (typeof number === 'number' && number > 0 && number <= 114) {
+      return number;
+    }
+    return null;
+  };
+
+  const isValidVerseNumber = (number: any): number | null => {
+    if (typeof number === 'number' && number > 0) {
+      return number;
+    }
+    return null;
+  };
+
   useEffect(() => {
     const storedApiKey = localStorage.getItem("gemini_api_key");
     if (storedApiKey) {
@@ -68,11 +83,33 @@ export const SearchPage = () => {
   }, []);
 
   const handleVerseClick = (surahNumber: number, verseNumber: number) => {
-    navigate(`/surah/${surahNumber}#verse-${verseNumber}`);
+    // Validasi nomor surah dan ayat sebelum navigasi
+    const validSurahNumber = isValidSurahNumber(surahNumber);
+    const validVerseNumber = isValidVerseNumber(verseNumber);
+    
+    if (!validSurahNumber) {
+      console.error("Invalid surah number:", surahNumber);
+      return;
+    }
+    
+    if (!validVerseNumber) {
+      console.error("Invalid verse number:", verseNumber);
+      return;
+    }
+    
+    navigate(`/surah/${validSurahNumber}#verse-${validVerseNumber}`);
   };
 
   const handleSurahClick = (surahNumber: number) => {
-    navigate(`/surah/${surahNumber}`);
+    // Validasi nomor surah sebelum navigasi
+    const validSurahNumber = isValidSurahNumber(surahNumber);
+    
+    if (!validSurahNumber) {
+      console.error("Invalid surah number:", surahNumber);
+      return;
+    }
+    
+    navigate(`/surah/${validSurahNumber}`);
   };
 
   const handleSearch = () => {
@@ -270,15 +307,21 @@ export const SearchPage = () => {
                           if (
                             (searchType === "verses" || searchType === "ai") &&
                             verse &&
-                            verse.number
+                            isValidVerseNumber(verse.number)
                           ) {
-                            handleVerseClick(
-                              result.number,
-                              verse.number
-                            );
+                            // Periksa apakah nomor surah valid sebelum navigasi
+                            const validSurahNumber = isValidSurahNumber(result.number);
+                            if (validSurahNumber) {
+                              handleVerseClick(
+                                validSurahNumber,
+                                verse.number
+                              );
+                            } else {
+                              console.error("Invalid surah number:", result.number);
+                            }
                           } else if (
                             searchType === "surahs" &&
-                            result.number
+                            isValidSurahNumber(result.number)
                           ) {
                             handleSurahClick(result.number);
                           }
@@ -289,7 +332,7 @@ export const SearchPage = () => {
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
                               <Badge variant="secondary" className="text-xs">
-                                QS. {result.name} : {verse.number}
+                                QS. {result.name || 'Surah'} : {verse.number}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
                                 Ketuk untuk buka
