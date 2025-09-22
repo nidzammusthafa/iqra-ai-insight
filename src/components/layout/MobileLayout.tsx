@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useFocusMode } from "@/hooks/useFocusModeHook";
 import { FloatingActionMenu } from "./FloatingActionMenu";
 import { SettingsSheet } from "@/components/settings/SettingsSheet";
+import { BackToTopButton } from "@/components/ui/BackToTopButton";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -49,6 +50,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
         onFocusToggle={() => setIsFocusMode(!isFocusMode)}
         onSettingsClick={() => setIsSettingsOpen(true)}
       />
+      <BackToTopButton />
 
       {/* Bottom Navigation and Settings Sheet are hidden in focus mode*/}
       {!isFocusMode && (

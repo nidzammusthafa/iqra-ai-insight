@@ -6,7 +6,17 @@ import { VerseCard } from "@/components/quran/VerseCard";
 import { StickyAudioPlayer } from "@/components/quran/StickyAudioPlayer";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Book, ChevronLeft, ChevronRight, Maximize, Minimize } from "lucide-react";
+import { JumpToVerseDialog } from "@/components/dialogs/JumpToVerseDialog";
+import { ArrowLeft, Book, ChevronLeft, ChevronRight, Hash } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFocusMode } from "@/hooks/useFocusModeHook";
@@ -26,10 +36,12 @@ export const SurahDetail = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const verseRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
 
+  const [isJumpDialogOpen, setIsJumpDialogOpen] = useState(false);
+
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const [swipeDistance, setSwipeDistance] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { isFocusMode, setIsFocusMode } = useFocusMode();
+  const { isFocusMode } = useFocusMode();
   
   const surahNum = parseInt(surahNumber || "1");
 
@@ -43,6 +55,15 @@ export const SurahDetail = () => {
   if (verses.length > 0) {
     verseRefs.current = verses.map((_) => createRef<HTMLDivElement>());
   }
+
+  const handleJumpToVerse = (verseNumber: number) => {
+    const element = document.getElementById(`verse-${verseNumber}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.classList.add('highlight');
+      setTimeout(() => element.classList.remove('highlight'), 3000);
+    }
+  };
 
   // Main audio playback logic
   useEffect(() => {
@@ -290,6 +311,14 @@ export const SurahDetail = () => {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => setIsJumpDialogOpen(true)}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <Hash className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={goToPreviousSurah}
                 disabled={surahNum <= 1}
                 className="text-muted-foreground hover:text-primary"
@@ -320,6 +349,15 @@ export const SurahDetail = () => {
             </div>
           )}
         </div>
+      )}
+
+      {surah && (
+        <JumpToVerseDialog 
+            open={isJumpDialogOpen}
+            onOpenChange={setIsJumpDialogOpen}
+            maxVerse={surah.numberOfAyahs}
+            onJump={handleJumpToVerse}
+        />
       )}
 
 
@@ -359,6 +397,18 @@ export const SurahDetail = () => {
           </div>
         ) : surah ? (
           <div className="space-y-6">
+            <Breadcrumb className="-mt-2 mb-2">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{surah.name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+
             {/* Surah Info Card */}
             <div className="verse-card bg-gradient-primary text-primary-foreground p-4 rounded-lg">
               <div className="text-center space-y-2">

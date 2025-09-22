@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Settings, Maximize, Minimize, X } from 'lucide-react';
+import { BackToTopButton } from '../ui/BackToTopButton';
 
 interface FloatingActionMenuProps {
   isFocusMode: boolean;
@@ -41,6 +42,8 @@ export const FloatingActionMenu = ({
   };
 
   return (
+    <>
+    <BackToTopButton />
     <div className="fixed bottom-20 right-5 z-50">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
@@ -74,5 +77,6 @@ export const FloatingActionMenu = ({
         </PopoverContent>
       </Popover>
     </div>
+    </>
   );
 };
