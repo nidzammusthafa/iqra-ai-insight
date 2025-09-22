@@ -29,7 +29,7 @@ const formatTime = (seconds: number) => {
   const floored = Math.floor(seconds);
   const min = Math.floor(floored / 60);
   const sec = floored % 60;
-  return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  return `${min}:${sec < 10 ? "0" : ""}${sec}`;
 };
 
 const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 2];
@@ -49,12 +49,14 @@ export const StickyAudioPlayer = ({
   onSpeedChange,
 }: StickyAudioPlayerProps) => {
   return (
-    <div className={cn(
-      "fixed bottom-16 left-0 right-0 z-50",
-      "bg-background/80 backdrop-blur-md border-t",
-      "transition-transform duration-300 ease-in-out",
-      "transform translate-y-0"
-    )}>
+    <div
+      className={cn(
+        "fixed bottom-16 left-0 right-0 z-50",
+        "bg-background/80 backdrop-blur-md border-t border-neutral-800/20",
+        "transition-transform duration-300 ease-in-out",
+        "transform translate-y-0"
+      )}
+    >
       <div className="container mx-auto px-4 pt-2 pb-1 flex flex-col">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 overflow-hidden">
@@ -67,15 +69,19 @@ export const StickyAudioPlayer = ({
           <div className="flex items-center space-x-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-16">{playbackSpeed}x</Button>
+                <Button variant="ghost" className="w-16">
+                  {playbackSpeed}x
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuRadioGroup
                   value={String(playbackSpeed)}
                   onValueChange={(val) => onSpeedChange(Number(val))}
                 >
-                  {PLAYBACK_SPEEDS.map(speed => (
-                    <DropdownMenuRadioItem key={speed} value={String(speed)}>{speed}x</DropdownMenuRadioItem>
+                  {PLAYBACK_SPEEDS.map((speed) => (
+                    <DropdownMenuRadioItem key={speed} value={String(speed)}>
+                      {speed}x
+                    </DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -99,14 +105,18 @@ export const StickyAudioPlayer = ({
           </div>
         </div>
         <div className="flex items-center space-x-2 mt-1">
-            <span className="text-xs text-muted-foreground w-10 text-center">{formatTime(currentTime)}</span>
-            <Slider
-                value={[currentTime]}
-                max={duration}
-                step={1}
-                onValueChange={(value) => onSeek(value[0])}
-            />
-            <span className="text-xs text-muted-foreground w-10 text-center">{formatTime(duration)}</span>
+          <span className="text-xs text-muted-foreground w-10 text-center">
+            {formatTime(currentTime)}
+          </span>
+          <Slider
+            value={[currentTime]}
+            max={duration}
+            step={1}
+            onValueChange={(value) => onSeek(value[0])}
+          />
+          <span className="text-xs text-muted-foreground w-10 text-center">
+            {formatTime(duration)}
+          </span>
         </div>
       </div>
     </div>

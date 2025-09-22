@@ -45,7 +45,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
       </main>
 
       {/* Floating Action Menu is always visible, but its content changes based on focus mode */}
-      <FloatingActionMenu 
+      <FloatingActionMenu
         isFocusMode={isFocusMode}
         onFocusToggle={() => setIsFocusMode(!isFocusMode)}
         onSettingsClick={() => setIsSettingsOpen(true)}
@@ -55,9 +55,12 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
       {/* Bottom Navigation and Settings Sheet are hidden in focus mode*/}
       {!isFocusMode && (
         <>
-          <SettingsSheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+          <SettingsSheet
+            open={isSettingsOpen}
+            onOpenChange={setIsSettingsOpen}
+          />
           <nav className="bottom-nav animate-slide-in-right backdrop-blur-md bg-card/95 shadow-lg">
-            <div className="flex justify-around items-center py-2 px-4 animate-fade-in">
+            <div className="flex justify-around items-center py-2 pl-4 pr-12 animate-fade-in">
               {navItems.map((item) => {
                 const isActive = item.activePattern.test(location.pathname);
                 const Icon = item.icon;
