@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { quranApi } from "@/services/quranApi";
 import { SuratResponse } from "@/types/quran";
 import { SurahCard } from "@/components/quran/SurahCard";
+import { PrayerTimesCard } from "@/components/prayer-times/PrayerTimesCard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Search, BookOpen } from "lucide-react";
@@ -58,6 +59,9 @@ export const QuranHome = () => {
           Bacalah kitab suci dengan hati yang khusyuk
         </p>
       </div>
+
+      {/* Prayer Times */}
+      <PrayerTimesCard />
 
       {/* Search */}
       <div className="relative">

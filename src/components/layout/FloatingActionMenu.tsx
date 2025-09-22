@@ -5,7 +5,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Settings, Maximize, Minimize, X } from "lucide-react";
+import { Settings, Maximize, Minimize, X, Compass } from "lucide-react";
+import { Link } from "react-router-dom";
 import { BackToTopButton } from "../ui/BackToTopButton";
 
 interface FloatingActionMenuProps {
@@ -69,6 +70,15 @@ export const FloatingActionMenu = ({
               >
                 <Maximize className="w-4 h-4" />
               </Button>
+              <Link to="/qibla">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full w-10 h-10"
+                >
+                  <Compass className="w-4 h-4" />
+                </Button>
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"

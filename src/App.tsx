@@ -11,6 +11,7 @@ import { HaditsHome } from "./pages/HaditsHome";
 import { HadithList } from "./pages/HadithList";
 import { HadithDetail } from "./pages/HadithDetail";
 import { SearchPage } from "./pages/SearchPage";
+import { QiblaPage } from "./pages/QiblaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/hadits/:rawi" element={<HadithList />} />
               <Route path="/hadits/:rawi/:haditsNumber" element={<HadithDetail />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/qibla" element={<QiblaPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
