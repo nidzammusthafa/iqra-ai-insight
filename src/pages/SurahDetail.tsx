@@ -1,23 +1,33 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, createRef } from "react";
 import { quranApi } from "@/services/quranApi";
 import { VerseCard } from "@/components/quran/VerseCard";
+import { StickyAudioPlayer } from "@/components/quran/StickyAudioPlayer";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Book, ChevronLeft, ChevronRight, Maximize, Minimize } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFocusMode } from "@/hooks/useFocusModeHook";
+import { useReadingPreferences } from "@/hooks/useReadingPreferences";
 import { SingleSurahResponse } from "@/types/quran";
 
 export const SurahDetail = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { preferences, updatePreferences } = useReadingPreferences();
+  const [currentPlayingVerse, setCurrentPlayingVerse] = useState<number | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const verseRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const [swipeDistance, setSwipeDistance] = useState(0);
-  const [playingVerse, setPlayingVerse] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isFocusMode, setIsFocusMode } = useFocusMode();
   
@@ -28,6 +38,95 @@ export const SurahDetail = () => {
     queryFn: () => quranApi.getSuratDetail(surahNum),
     enabled: !!surahNum && surahNum >= 1 && surahNum <= 114,
   });
+
+  const verses = surah?.ayahs || surah?.verses || [];
+  if (verses.length > 0) {
+    verseRefs.current = verses.map((_) => createRef<HTMLDivElement>());
+  }
+
+  // Main audio playback logic
+  useEffect(() => {
+    if (currentPlayingVerse && surah) {
+      const verse = verses.find(v => v.number.inSurah === currentPlayingVerse);
+      const qari = preferences.selectedQari;
+      if (verse && verse.audio[qari] && audioRef.current) {
+        audioRef.current.src = verse.audio[qari];
+        audioRef.current.playbackRate = preferences.playbackSpeed;
+        audioRef.current.play().then(() => {
+          setIsAudioPlaying(true);
+          verseRefs.current[currentPlayingVerse - 1]?.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }).catch(err => {
+          console.error("Audio playback failed:", err);
+          toast({ variant: "destructive", title: "Gagal memutar audio" });
+          setIsAudioPlaying(false);
+        });
+      } else {
+        toast({ variant: "destructive", title: "Audio tidak ditemukan" });
+        setCurrentPlayingVerse(null);
+      }
+    } else if (audioRef.current) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    }
+  }, [currentPlayingVerse, surah, preferences.selectedQari, verses, toast, preferences.playbackSpeed]);
+
+  const handlePlayPause = (verseNumber?: number) => {
+    if (verseNumber && verseNumber !== currentPlayingVerse) {
+      setCurrentPlayingVerse(verseNumber);
+    } else if (currentPlayingVerse) {
+      if (isAudioPlaying) {
+        audioRef.current?.pause();
+        setIsAudioPlaying(false);
+      } else {
+        audioRef.current?.play();
+        setIsAudioPlaying(true);
+      }
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPlayingVerse && currentPlayingVerse < verses.length) {
+      setCurrentPlayingVerse(currentPlayingVerse + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPlayingVerse && currentPlayingVerse > 1) {
+      setCurrentPlayingVerse(currentPlayingVerse - 1);
+    }
+  };
+
+  const handleClosePlayer = () => {
+    setCurrentPlayingVerse(null);
+  };
+
+  const handleAudioEnded = () => {
+    if (preferences.isAutoplayEnabled) {
+      setTimeout(() => {
+        handleNext();
+      }, preferences.autoplayDelay * 1000);
+    } else {
+      setCurrentPlayingVerse(null);
+      setIsAudioPlaying(false);
+    }
+  };
+
+  const handleSeek = (time: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+      updatePreferences({ playbackSpeed: speed });
+    }
+  };
 
   // Scroll to verse if hash is present
   useEffect(() => {
@@ -228,10 +327,36 @@ export const SurahDetail = () => {
         variant="outline"
         size="icon"
         onClick={() => setIsFocusMode(!isFocusMode)}
-        className="fixed bottom-4 right-4 z-50 rounded-full shadow-lg"
+        className="fixed bottom-20 right-4 z-50 rounded-full shadow-lg"
       >
         {isFocusMode ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
       </Button>
+
+      {/* Audio Player Element */}
+      <audio 
+        ref={audioRef} 
+        onEnded={handleAudioEnded}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+      />
+
+      {/* Sticky Audio Player UI */}
+      {currentPlayingVerse && surah && (
+        <StickyAudioPlayer 
+          isPlaying={isAudioPlaying}
+          surahName={surah.name}
+          verseNumber={currentPlayingVerse}
+          duration={duration}
+          currentTime={currentTime}
+          playbackSpeed={preferences.playbackSpeed}
+          onPlayPause={() => handlePlayPause(currentPlayingVerse)}
+          onNext={handleNext}
+          onPrev={handlePrev}
+          onClose={handleClosePlayer}
+          onSeek={handleSeek}
+          onSpeedChange={handleSpeedChange}
+        />
+      )}
 
       {/* Content */}
       <div className="p-4">
@@ -243,7 +368,7 @@ export const SurahDetail = () => {
         ) : surah ? (
           <div className="space-y-6">
             {/* Surah Info Card */}
-            <div className="verse-card bg-gradient-primary text-primary-foreground">
+            <div className="verse-card bg-gradient-primary text-primary-foreground p-4 rounded-lg">
               <div className="text-center space-y-2">
                 <div className="flex items-center justify-center space-x-2 mb-2">
                   <Book className="w-5 h-5" />
@@ -264,7 +389,7 @@ export const SurahDetail = () => {
 
             {/* Bismillah for non-Fatiha and non-Tawbah */}
             {surah.number !== 1 && surah.number !== 9 && surah.bismillah && (
-              <div className="verse-card text-center">
+              <div className="verse-card text-center p-4 rounded-lg">
                 <div className="arabic-large text-primary font-bold">
                   {surah.bismillah.arab}
                 </div>
@@ -275,22 +400,22 @@ export const SurahDetail = () => {
             )}
 
             {/* Verses */}
-            <div className="space-y-4">
-              {(surah.ayahs || surah.verses).map((verse) => (
-                <div key={verse.number.inSurah} id={`verse-${verse.number.inSurah}`}>
-                  <VerseCard
-                    verse={verse}
-                    surahNumber={surah.number}
-                    surahName={surah.name}
-                    playingVerse={playingVerse}
-                    setPlayingVerse={setPlayingVerse}
-                  />
-                </div>
+            <div className="space-y-1">
+              {verses.map((verse, index) => (
+                <VerseCard
+                  ref={verseRefs.current[index]}
+                  key={verse.number.inSurah}
+                  verse={verse}
+                  surahNumber={surah.number}
+                  surahName={surah.name}
+                  isPlaying={currentPlayingVerse === verse.number.inSurah && isAudioPlaying}
+                  onPlay={() => handlePlayPause(verse.number.inSurah)}
+                />
               ))}
             </div>
 
             {/* End spacing */}
-            <div className="h-8" />
+            <div className="h-24" />
           </div>
         ) : null}
       </div>

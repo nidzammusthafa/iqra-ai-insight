@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, forwardRef } from "react";
 import { Verse } from "@/types/quran";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import {
   EyeOff,
   Lightbulb,
   Share,
-  Volume2,
   Bookmark,
   BookmarkCheck,
   Play,
@@ -24,30 +23,19 @@ interface VerseCardProps {
   surahNumber: number;
   surahName: string;
   className?: string;
-  playingVerse: number | null;
-  setPlayingVerse: (verseNumber: number | null) => void;
+  isPlaying: boolean;
+  onPlay: () => void;
 }
 
-export const VerseCard = ({
-  verse,
-  surahNumber,
-  surahName,
-  className,
-  playingVerse,
-  setPlayingVerse,
-}: VerseCardProps) => {
+export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
+  { verse, surahNumber, surahName, className, isPlaying, onPlay },
+  ref
+) => {
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { preferences, updatePreferences } = useReadingPreferences();
-  const {
-    isBookmarked,
-    getBookmark,
-    addBookmark,
-    removeBookmark,
-    updateBookmark,
-  } = useBookmarks();
+  const { isBookmarked, getBookmark, addBookmark, removeBookmark, updateBookmark } = useBookmarks();
   const { toast } = useToast();
 
   const verseNumber = verse.number.inSurah;
@@ -56,28 +44,6 @@ export const VerseCard = ({
 
   const isCurrentlyBookmarked = isBookmarked(surahNumber, verseNumber);
   const existingBookmark = getBookmark(surahNumber, verseNumber);
-  const isPlaying = playingVerse === verseNumber;
-
-  useEffect(() => {
-    const qari = preferences.selectedQari;
-    if (verse.audio && verse.audio[qari]) {
-      audioRef.current = new Audio(verse.audio[qari]);
-      audioRef.current.onended = () => setPlayingVerse(null);
-    } else {
-      audioRef.current = null;
-    }
-
-    return () => {
-      audioRef.current?.pause();
-    };
-  }, [verse.audio, preferences.selectedQari, setPlayingVerse]);
-
-  useEffect(() => {
-    if (playingVerse !== verseNumber && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  }, [playingVerse, verseNumber]);
 
   const handleShare = () => {
     const text = `${verseText}\n\n${verseTranslation}\n\nQS. ${surahName} (${surahNumber}):${verseNumber}`;
@@ -93,31 +59,6 @@ export const VerseCard = ({
         title: "Ayat disalin",
         description: "Ayat telah disalin ke clipboard",
       });
-    }
-  };
-
-  const handleAudio = () => {
-    if (!audioRef.current) {
-      toast({
-        title: "Audio tidak tersedia",
-        description: "Audio untuk ayat ini tidak ditemukan.",
-      });
-      return;
-    }
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setPlayingVerse(null);
-    } else {
-      audioRef.current.play().catch((err) => {
-        console.error("Audio playback failed:", err);
-        toast({
-          variant: "destructive",
-          title: "Gagal memutar audio",
-          description: "Tidak dapat memutar file audio.",
-        });
-      });
-      setPlayingVerse(verseNumber);
     }
   };
 
@@ -188,7 +129,15 @@ export const VerseCard = ({
   };
 
   return (
-    <div className={cn("verse-card space-y-4", className)}>
+    <div 
+      ref={ref}
+      id={`verse-${verseNumber}`}
+      className={cn(
+        "verse-card space-y-4 p-4 rounded-lg transition-colors duration-300",
+        isPlaying && "bg-primary-light/50",
+        className
+      )}
+    >
       {/* Verse number badge */}
       <div className="flex items-center justify-between">
         <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center">
@@ -196,7 +145,7 @@ export const VerseCard = ({
         </div>
 
         {/* Control buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           <Button
             variant="ghost"
             size="sm"
@@ -217,10 +166,10 @@ export const VerseCard = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleAudio}
+            onClick={onPlay}
             className={cn(
               "text-muted-foreground hover:text-primary",
-              isPlaying && "text-secondary"
+              isPlaying && "text-primary"
             )}
           >
             {isPlaying ? (
@@ -236,7 +185,7 @@ export const VerseCard = ({
             onClick={handleBookmarkToggle}
             className={cn(
               "text-muted-foreground hover:text-primary",
-              isCurrentlyBookmarked && "text-secondary"
+              isCurrentlyBookmarked && "text-primary"
             )}
           >
             {isCurrentlyBookmarked ? (
@@ -272,7 +221,7 @@ export const VerseCard = ({
       {/* Arabic text */}
       <div
         className={cn(
-          "arabic-text text-foreground",
+          "arabic-text text-right text-foreground",
           getArabicFontClass(),
           getLineSpacingClass()
         )}
@@ -318,4 +267,5 @@ export const VerseCard = ({
       />
     </div>
   );
-};
+});
+

@@ -9,6 +9,9 @@ const DEFAULT_PREFERENCES: ReadingPreferences = {
   lineSpacing: 'normal',
   theme: 'auto',
   selectedQari: 'alafasy',
+  isAutoplayEnabled: false,
+  autoplayDelay: 2, // default 2 seconds
+  playbackSpeed: 1,
 };
 
 export const useReadingPreferences = () => {

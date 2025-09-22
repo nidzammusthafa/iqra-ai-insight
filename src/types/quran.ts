@@ -167,6 +167,9 @@ export type ReadingPreferences = {
   lineSpacing: 'compact' | 'normal' | 'relaxed';
   theme: 'light' | 'dark' | 'auto';
   selectedQari: Qari;
+  isAutoplayEnabled: boolean;
+  autoplayDelay: number; // in seconds
+  playbackSpeed: number; // e.g., 1, 1.25, 1.5
 };
 
 // Bookmark types

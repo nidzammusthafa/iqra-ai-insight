@@ -8,11 +8,10 @@ Memungkinkan pengguna untuk mendengarkan bacaan Al-Quran secara otomatis, di man
 
 - **Pengaturan Autoplay di Halaman Settings:**
   - Menambahkan toggle `Switch` di halaman `SettingsPage` untuk mengaktifkan/menonaktifkan mode autoplay secara global.
-  - Menambahkan komponen `Slider` untuk mengatur jeda waktu (misalnya, 0-5 detik) antara pemutaran satu ayat ke ayat berikutnya.
 - **Komponen Audio Player Sticky:**
   - Membuat komponen `StickyAudioPlayer` yang akan muncul di halaman `SurahDetail` (menempel di atas navigasi bawah) ketika sebuah ayat sedang diputar.
   - Komponen ini akan menampilkan informasi surah & ayat yang sedang diputar, serta tombol kontrol (Play/Pause, Next, Previous).
-- **Pemutaran Berurutan dengan Jeda:** Ketika autoplay aktif, audio untuk ayat berikutnya akan dimulai secara otomatis setelah jeda waktu yang ditentukan pengguna.
+- **Pemutaran Berurutan dengan Jeda:** Ketika autoplay aktif, audio untuk ayat berikutnya akan dimulai secara otomatis.
 - **Highlight Ayat Aktif:** Memberikan indikator visual pada `VerseCard` yang audionya sedang diputar.
 - **Auto-scroll:** Halaman akan otomatis scroll untuk menjaga agar ayat yang sedang diputar tetap terlihat.
 - **Berhenti di Akhir Surah:** Autoplay akan berhenti setelah ayat terakhir dari surah selesai diputar.
@@ -24,17 +23,19 @@ Memungkinkan pengguna untuk mendengarkan bacaan Al-Quran secara otomatis, di man
 - **Modifikasi `useReadingPreferences.ts`:**
   - Tambahkan state baru ke dalam `ReadingPreferences` dan `DEFAULT_PREFERENCES`:
     - `isAutoplayEnabled` (boolean, default: `false`)
-    - `autoplayDelay` (number, default: `2` detik)
+    - `autoplayDelay` (number, default: `0` detik)
   - Pastikan state ini disimpan dan diambil dari `localStorage` bersama dengan preferensi lainnya.
 
 ### b. Komponen UI
 
 1.  **Modifikasi `SettingsPage.tsx`:**
+
     - Tambahkan `Card` baru atau seksi "Preferensi Audio".
     - Di dalamnya, tambahkan komponen `Switch` yang terhubung ke `preferences.isAutoplayEnabled` dari `useReadingPreferences`.
     - Tambahkan komponen `Slider` yang terhubung ke `preferences.autoplayDelay`. Tampilkan nilai detik yang dipilih.
 
 2.  **Komponen Baru `StickyAudioPlayer.tsx`:**
+
     - Komponen ini menerima props seperti `currentVerse`, `surahName`, `isPlaying`, dan fungsi-fungsi untuk kontrol (handlePlayPause, handleNext, handlePrev).
     - Render sebuah `div` dengan `position: fixed`, `bottom: 4.5rem` (atau tinggi navigasi bawah), `left: 0`, `right: 0`.
     - Gunakan `z-index` yang sesuai agar muncul di atas konten lain.
@@ -42,6 +43,7 @@ Memungkinkan pengguna untuk mendengarkan bacaan Al-Quran secara otomatis, di man
     - Komponen ini akan dirender secara kondisional di `SurahDetail.tsx` atau `MobileLayout.tsx` hanya jika ada ayat yang aktif diputar.
 
 3.  **Modifikasi `VerseCard.tsx`:**
+
     - Tetap sama: tambahkan prop `isPlaying: boolean` untuk styling kondisional dan `ref` untuk auto-scroll.
 
 4.  **Modifikasi `SurahDetail.tsx`:**
@@ -53,11 +55,13 @@ Memungkinkan pengguna untuk mendengarkan bacaan Al-Quran secara otomatis, di man
 ### c. Logika Autoplay
 
 1.  **Event Handler `onEnded` pada `<audio>`:**
+
     - Ketika audio selesai, cek jika `isAutoplayEnabled` adalah `true`.
     - Jika ya, gunakan `setTimeout` dengan durasi `autoplayDelay * 1000` (dari `useReadingPreferences`).
     - Setelah timeout, panggil fungsi untuk memutar ayat berikutnya (`playNextVerse`).
 
 2.  **Fungsi `playNextVerse`:**
+
     - Hitung `nextVerseNumber = currentPlayingVerse + 1`.
     - Pastikan tidak melebihi jumlah ayat.
     - Update state `setCurrentPlayingVerse(nextVerseNumber)`.

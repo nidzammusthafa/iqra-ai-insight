@@ -13,6 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
   Settings,
   Palette,
@@ -23,6 +24,7 @@ import {
   Moon,
   Sun,
   Monitor,
+  PlayCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -280,6 +282,54 @@ export const SettingsPage = () => {
           >
             Reset ke Default
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Audio Preferences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <PlayCircle className="w-5 h-5" />
+            <span>Preferensi Audio</span>
+          </CardTitle>
+          <CardDescription>
+            Atur pemutaran audio otomatis (autoplay)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Autoplay Ayat Berikutnya</p>
+              <p className="text-sm text-muted-foreground">
+                Lanjutkan pemutaran ke ayat berikutnya secara otomatis.
+              </p>
+            </div>
+            <Switch
+              checked={preferences.isAutoplayEnabled}
+              onCheckedChange={(checked) =>
+                updatePreferences({ isAutoplayEnabled: checked })
+              }
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+                <p className="font-medium">Jeda Antar Ayat</p>
+                <span className="text-sm font-medium text-primary">
+                  {preferences.autoplayDelay} detik
+                </span>
+            </div>
+            <Slider
+              value={[preferences.autoplayDelay]}
+              onValueChange={(value) =>
+                updatePreferences({ autoplayDelay: value[0] })
+              }
+              min={0}
+              max={10}
+              step={1}
+              disabled={!preferences.isAutoplayEnabled}
+            />
+          </div>
         </CardContent>
       </Card>
 
