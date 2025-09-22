@@ -322,15 +322,7 @@ export const SurahDetail = () => {
         </div>
       )}
 
-      {/* Focus Mode Toggle Button */}
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setIsFocusMode(!isFocusMode)}
-        className="fixed bottom-20 right-4 z-50 rounded-full shadow-lg"
-      >
-        {isFocusMode ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-      </Button>
+
 
       {/* Audio Player Element */}
       <audio 
