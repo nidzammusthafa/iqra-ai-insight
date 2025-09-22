@@ -28,7 +28,9 @@ export const SurahDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { preferences, updatePreferences } = useReadingPreferences();
-  const [currentPlayingVerse, setCurrentPlayingVerse] = useState<number | null>(null);
+  const [currentPlayingVerse, setCurrentPlayingVerse] = useState<number | null>(
+    null
+  );
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -42,15 +44,20 @@ export const SurahDetail = () => {
   const [swipeDistance, setSwipeDistance] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { isFocusMode } = useFocusMode();
-  
+
   const surahNum = parseInt(surahNumber || "1");
 
-  const { data: surah, isLoading, error } = useQuery<SingleSurahResponse>({
+  const {
+    data: surah,
+    isLoading,
+    error,
+  } = useQuery<SingleSurahResponse>({
     queryKey: ["surah", surahNum],
     queryFn: () => quranApi.getSuratDetail(surahNum),
     enabled: !!surahNum && surahNum >= 1 && surahNum <= 114,
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const verses = surah?.ayahs || surah?.verses || [];
   if (verses.length > 0) {
     verseRefs.current = verses.map((_) => createRef<HTMLDivElement>());
@@ -59,31 +66,38 @@ export const SurahDetail = () => {
   const handleJumpToVerse = (verseNumber: number) => {
     const element = document.getElementById(`verse-${verseNumber}`);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      element.classList.add('highlight');
-      setTimeout(() => element.classList.remove('highlight'), 3000);
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("highlight");
+      setTimeout(() => element.classList.remove("highlight"), 3000);
     }
   };
 
   // Main audio playback logic
   useEffect(() => {
     if (currentPlayingVerse && surah) {
-      const verse = verses.find(v => v.number.inSurah === currentPlayingVerse);
+      const verse = verses.find(
+        (v) => v.number.inSurah === currentPlayingVerse
+      );
       const qari = preferences.selectedQari;
       if (verse && verse.audio[qari] && audioRef.current) {
         audioRef.current.src = verse.audio[qari];
         audioRef.current.playbackRate = preferences.playbackSpeed;
-        audioRef.current.play().then(() => {
-          setIsAudioPlaying(true);
-          verseRefs.current[currentPlayingVerse - 1]?.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
+        audioRef.current
+          .play()
+          .then(() => {
+            setIsAudioPlaying(true);
+            verseRefs.current[currentPlayingVerse - 1]?.current?.scrollIntoView(
+              {
+                behavior: "smooth",
+                block: "center",
+              }
+            );
+          })
+          .catch((err) => {
+            console.error("Audio playback failed:", err);
+            toast({ variant: "destructive", title: "Gagal memutar audio" });
+            setIsAudioPlaying(false);
           });
-        }).catch(err => {
-          console.error("Audio playback failed:", err);
-          toast({ variant: "destructive", title: "Gagal memutar audio" });
-          setIsAudioPlaying(false);
-        });
       } else {
         toast({ variant: "destructive", title: "Audio tidak ditemukan" });
         setCurrentPlayingVerse(null);
@@ -92,7 +106,14 @@ export const SurahDetail = () => {
       audioRef.current.pause();
       setIsAudioPlaying(false);
     }
-  }, [currentPlayingVerse, surah, preferences.selectedQari, verses, toast, preferences.playbackSpeed]);
+  }, [
+    currentPlayingVerse,
+    surah,
+    preferences.selectedQari,
+    verses,
+    toast,
+    preferences.playbackSpeed,
+  ]);
 
   const handlePlayPause = (verseNumber?: number) => {
     if (verseNumber && verseNumber !== currentPlayingVerse) {
@@ -156,9 +177,9 @@ export const SurahDetail = () => {
       const element = document.getElementById(verseId);
       if (element) {
         setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('highlight');
-          setTimeout(() => element.classList.remove('highlight'), 3000);
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.classList.add("highlight");
+          setTimeout(() => element.classList.remove("highlight"), 3000);
         }, 500);
       }
     }
@@ -168,22 +189,22 @@ export const SurahDetail = () => {
   useEffect(() => {
     if (surah) {
       const lastRead = { surah: surahNum, verse: 1 };
-      localStorage.setItem('last_read_verse', JSON.stringify(lastRead));
+      localStorage.setItem("last_read_verse", JSON.stringify(lastRead));
     }
   }, [surah, surahNum]);
 
   // Sticky header scroll effect
   useEffect(() => {
-    const header = containerRef.current?.querySelector('.sticky-header');
+    const header = containerRef.current?.querySelector(".sticky-header");
     if (!header) return;
 
     const handleScroll = () => {
       const scrolled = window.scrollY > 50;
-      header.classList.toggle('scrolled', scrolled);
+      header.classList.toggle("scrolled", scrolled);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Swipe navigation handlers
@@ -194,7 +215,7 @@ export const SurahDetail = () => {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (swipeStart === null) return;
-    
+
     const currentTouch = e.touches[0].clientX;
     const distance = currentTouch - swipeStart;
     setSwipeDistance(distance);
@@ -202,9 +223,9 @@ export const SurahDetail = () => {
 
   const handleTouchEnd = () => {
     if (swipeStart === null) return;
-    
+
     const threshold = 100; // minimum swipe distance
-    
+
     if (Math.abs(swipeDistance) > threshold) {
       if (swipeDistance > 0 && surahNum > 1) {
         // Swipe right - previous surah
@@ -214,7 +235,7 @@ export const SurahDetail = () => {
           description: `Beralih ke surah sebelumnya`,
         });
       } else if (swipeDistance < 0 && surahNum < 114) {
-        // Swipe left - next surah  
+        // Swipe left - next surah
         navigate(`/surah/${surahNum + 1}`);
         toast({
           title: "Pindah Surah",
@@ -222,7 +243,7 @@ export const SurahDetail = () => {
         });
       }
     }
-    
+
     setSwipeStart(null);
     setSwipeDistance(0);
   };
@@ -269,7 +290,7 @@ export const SurahDetail = () => {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen"
       ref={containerRef}
       onTouchStart={handleTouchStart}
@@ -288,7 +309,7 @@ export const SurahDetail = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            
+
             {surah ? (
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -341,10 +362,13 @@ export const SurahDetail = () => {
           {Math.abs(swipeDistance) > 50 && (
             <div className="absolute top-full left-0 right-0 bg-primary/10 backdrop-blur-sm p-2 text-center animate-slide-in-right border-b border-primary/20">
               <p className="text-sm text-primary font-medium animate-fade-in">
-                {swipeDistance > 0 
-                  ? `← Surah sebelumnya ${surahNum > 1 ? `(${surahNum - 1})` : ''}` 
-                  : `Surah selanjutnya → ${surahNum < 114 ? `(${surahNum + 1})` : ''}`
-                }
+                {swipeDistance > 0
+                  ? `← Surah sebelumnya ${
+                      surahNum > 1 ? `(${surahNum - 1})` : ""
+                    }`
+                  : `Surah selanjutnya → ${
+                      surahNum < 114 ? `(${surahNum + 1})` : ""
+                    }`}
               </p>
             </div>
           )}
@@ -352,19 +376,17 @@ export const SurahDetail = () => {
       )}
 
       {surah && (
-        <JumpToVerseDialog 
-            open={isJumpDialogOpen}
-            onOpenChange={setIsJumpDialogOpen}
-            maxVerse={surah.numberOfAyahs}
-            onJump={handleJumpToVerse}
+        <JumpToVerseDialog
+          open={isJumpDialogOpen}
+          onOpenChange={setIsJumpDialogOpen}
+          maxVerse={surah.numberOfAyahs}
+          onJump={handleJumpToVerse}
         />
       )}
 
-
-
       {/* Audio Player Element */}
-      <audio 
-        ref={audioRef} 
+      <audio
+        ref={audioRef}
         onEnded={handleAudioEnded}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
         onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
@@ -372,7 +394,7 @@ export const SurahDetail = () => {
 
       {/* Sticky Audio Player UI */}
       {currentPlayingVerse && surah && (
-        <StickyAudioPlayer 
+        <StickyAudioPlayer
           isPlaying={isAudioPlaying}
           surahName={surah.name}
           verseNumber={currentPlayingVerse}
@@ -400,7 +422,9 @@ export const SurahDetail = () => {
             <Breadcrumb className="-mt-2 mb-2">
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Home</Link>
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
@@ -416,15 +440,17 @@ export const SurahDetail = () => {
                   <Book className="w-5 h-5" />
                   <span className="font-semibold">Surah {surah.name}</span>
                 </div>
-                
-                <h2 className="arabic-large font-bold">
-                  {surah.name}
-                </h2>
-                
+
+                <h2 className="arabic-large font-bold">{surah.name}</h2>
+
                 <div className="text-primary-foreground/80 text-sm space-y-1">
                   <p>{surah.translation}</p>
-                  <p>{surah.numberOfAyahs} ayat • {surah.revelation}</p>
-                  {surah.description && <p className="text-xs pt-2">{surah.description}</p>}
+                  <p>
+                    {surah.numberOfAyahs} ayat • {surah.revelation}
+                  </p>
+                  {surah.description && (
+                    <p className="text-xs pt-2">{surah.description}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -450,7 +476,10 @@ export const SurahDetail = () => {
                   verse={verse}
                   surahNumber={surah.number}
                   surahName={surah.name}
-                  isPlaying={currentPlayingVerse === verse.number.inSurah && isAudioPlaying}
+                  isPlaying={
+                    currentPlayingVerse === verse.number.inSurah &&
+                    isAudioPlaying
+                  }
                   onPlay={() => handlePlayPause(verse.number.inSurah)}
                 />
               ))}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bookmark, BookmarkFolder } from '@/types/quran';
+import { triggerHapticFeedback } from '@/lib/utils';
 
 export const useBookmarks = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -51,12 +52,14 @@ export const useBookmarks = () => {
     
     const newBookmarks = [...bookmarks, newBookmark];
     saveBookmarks(newBookmarks);
+    triggerHapticFeedback();
     return newBookmark;
   };
 
   const removeBookmark = (bookmarkId: string) => {
     const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId);
     saveBookmarks(newBookmarks);
+    triggerHapticFeedback();
     
     // Also remove from folders
     const newFolders = folders.map(folder => ({
@@ -107,7 +110,7 @@ export const useBookmarks = () => {
   const addBookmarkToFolder = (bookmarkId: string, folderId: string) => {
     const newFolders = folders.map(folder => 
       folder.id === folderId && !folder.bookmarkIds.includes(bookmarkId)
-        ? { ...folder, bookmarkIds: [...folder.bookmarkIds, bookmarkId] }
+        ? { ...folder, bookmarkIds: [...folder.bookmarkIds, bookmarkId] } 
         : folder
     );
     saveFolders(newFolders);
