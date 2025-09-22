@@ -1,26 +1,44 @@
-import { usePrayerTimes } from '@/hooks/usePrayerTimes';
-import { PrayerCard } from './PrayerCard';
-import { CurrentTimeCard } from './CurrentTimeCard';
-import { CalendarPrayerTimes } from './CalendarPrayerTimes';
-import { LoadingSpinner } from './LoadingSpinner';
-import { ErrorCard } from './ErrorCard';
-import { MapPin, Compass, Globe } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState } from 'react';
+import { usePrayerTimes } from "@/hooks/usePrayerTimes";
+import { PrayerCard } from "./PrayerCard";
+import { CurrentTimeCard } from "./CurrentTimeCard";
+import { CalendarPrayerTimes } from "./CalendarPrayerTimes";
+import { LoadingSpinner } from "./LoadingSpinner";
+import { ErrorCard } from "./ErrorCard";
+import { MapPin, Compass, Globe } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
 
 export const PrayerTimes = () => {
-  const { prayerTimes, currentTime, loading, error, location, cityName, setSelectedTimezone } = usePrayerTimes();
+  const {
+    prayerTimes,
+    currentTime,
+    loading,
+    error,
+    location,
+    cityName,
+    setSelectedTimezone,
+  } = usePrayerTimes();
   const [showTimezoneSelect, setShowTimezoneSelect] = useState(false);
-  
+
   const timezones = [
-    { value: 'Asia/Jakarta', label: 'Jakarta (WIB)', offset: '+07:00' },
-    { value: 'Asia/Makassar', label: 'Makassar (WITA)', offset: '+08:00' },
-    { value: 'Asia/Jayapura', label: 'Jayapura (WIT)', offset: '+09:00' },
-    { value: 'Asia/Pontianak', label: 'Pontianak (WIB)', offset: '+07:00' },
-    { value: 'Asia/Kuala_Lumpur', label: 'Kuala Lumpur (MYT)', offset: '+08:00' },
-    { value: 'Asia/Singapore', label: 'Singapore (SGT)', offset: '+08:00' },
-    { value: 'Asia/Brunei', label: 'Brunei (BNT)', offset: '+08:00' },
+    { value: "Asia/Jakarta", label: "Jakarta (WIB)", offset: "+07:00" },
+    { value: "Asia/Makassar", label: "Makassar (WITA)", offset: "+08:00" },
+    { value: "Asia/Jayapura", label: "Jayapura (WIT)", offset: "+09:00" },
+    { value: "Asia/Pontianak", label: "Pontianak (WIB)", offset: "+07:00" },
+    {
+      value: "Asia/Kuala_Lumpur",
+      label: "Kuala Lumpur (MYT)",
+      offset: "+08:00",
+    },
+    { value: "Asia/Singapore", label: "Singapore (SGT)", offset: "+08:00" },
+    { value: "Asia/Brunei", label: "Brunei (BNT)", offset: "+08:00" },
   ];
 
   if (loading) {
@@ -32,20 +50,23 @@ export const PrayerTimes = () => {
       <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2 pt-8">
-          <div className="flex items-center justify-center space-x-2 text-primary">
+          <div className="flex items-center justify-center space-x-2 text-foreground/80">
             <Compass className="w-6 h-6" />
             <h1 className="text-2xl font-bold">Jadwal Sholat</h1>
           </div>
           {location && (
             <div className="space-y-2">
-              <div className="flex items-center justify-center space-x-1 text-muted-foreground text-sm">
+              <div className="flex items-center justify-center space-x-1 text-foreground/80 text-sm">
                 <MapPin className="w-4 h-4" />
-                <span>{cityName || `${location.lat.toFixed(2)}, ${location.lng.toFixed(2)}`}</span>
+                <span>
+                  {cityName ||
+                    `${location.lat.toFixed(2)}, ${location.lng.toFixed(2)}`}
+                </span>
               </div>
               <div className="flex items-center justify-center">
                 <button
                   onClick={() => setShowTimezoneSelect(!showTimezoneSelect)}
-                  className="flex items-center space-x-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                  className="flex items-center space-x-1 text-xs text-foreground/80 hover:text-muted-foreground transition-colors"
                 >
                   <Globe className="w-3 h-3" />
                   <span>Pilih Zona Waktu</span>
@@ -53,10 +74,12 @@ export const PrayerTimes = () => {
               </div>
               {showTimezoneSelect && (
                 <div className="flex justify-center animate-fade-in">
-                  <Select onValueChange={(value) => {
-                    setSelectedTimezone(value);
-                    setShowTimezoneSelect(false);
-                  }}>
+                  <Select
+                    onValueChange={(value) => {
+                      setSelectedTimezone(value);
+                      setShowTimezoneSelect(false);
+                    }}
+                  >
                     <SelectTrigger className="w-64">
                       <SelectValue placeholder="Pilih zona waktu" />
                     </SelectTrigger>
@@ -86,7 +109,7 @@ export const PrayerTimes = () => {
             <TabsTrigger value="today">Hari Ini</TabsTrigger>
             <TabsTrigger value="calendar">Kalender</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="today" className="space-y-4 mt-6">
             {/* Prayer Times */}
             {prayerTimes.length > 0 && (
@@ -100,7 +123,7 @@ export const PrayerTimes = () => {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="calendar" className="mt-6">
             <CalendarPrayerTimes location={location} />
           </TabsContent>

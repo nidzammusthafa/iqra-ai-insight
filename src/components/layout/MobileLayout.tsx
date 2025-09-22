@@ -1,4 +1,4 @@
-import { Book, BookOpen, Search } from "lucide-react";
+import { Book, BookOpen, Search, Clock } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,12 @@ const navItems = [
     icon: Search,
     path: "/search",
     activePattern: /^\/search/,
+  },
+  {
+    label: "Sholat",
+    icon: Clock,
+    path: "/prayer-times",
+    activePattern: /^\/prayer-times/,
   },
 ];
 
@@ -64,7 +70,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
             onOpenChange={setIsSettingsOpen}
           />
           <nav className="bottom-nav animate-slide-in-right backdrop-blur-md bg-card/95 shadow-lg">
-            <div className="flex justify-around items-center py-2 pl-4 pr-12 animate-fade-in">
+            <div className="flex justify-around items-center py-2 pr-12 animate-fade-in">
               {navItems.map((item) => {
                 const isActive = item.activePattern.test(location.pathname);
                 const Icon = item.icon;
