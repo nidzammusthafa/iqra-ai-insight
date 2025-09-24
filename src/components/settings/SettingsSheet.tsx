@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
-import { useReadingPreferences } from "@/hooks/useReadingPreferences";
-import { useBookmarks } from "@/hooks/useBookmarks";
+import { useAppStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +19,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -54,9 +52,14 @@ interface SettingsSheetProps {
 export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { preferences, updatePreferences, resetPreferences } =
-    useReadingPreferences();
-  const { bookmarks, folders } = useBookmarks();
+  const {
+    preferences,
+    updatePreferences,
+    resetPreferences,
+    bookmarks,
+    folders,
+  } = useAppStore();
+
   const [theme, setTheme] = useState<"light" | "dark" | "auto">("auto");
   const [lastReadVerse, setLastReadVerse] = useState<{
     surah: number;

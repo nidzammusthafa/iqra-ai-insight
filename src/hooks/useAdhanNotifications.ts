@@ -1,10 +1,10 @@
 
 import { useEffect, useMemo } from 'react';
-import { useReadingPreferences } from '@/hooks/useReadingPreferences';
+import { useAppStore } from '@/store';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 
 export function useAdhanNotifications() {
-  const { preferences } = useReadingPreferences();
+  const { preferences } = useAppStore();
   const today = useMemo(() => new Date(), []);
   const { prayerTimes } = usePrayerTimes(today); // Notifications only for today
 

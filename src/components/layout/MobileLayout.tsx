@@ -1,5 +1,5 @@
 import { Book, BookOpen, Search, Clock } from "lucide-react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useRef, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useFocusMode } from "@/hooks/useFocusModeHook";
@@ -7,6 +7,10 @@ import { FloatingActionMenu } from "./FloatingActionMenu";
 import { SettingsSheet } from "@/components/settings/SettingsSheet";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 import { useAdhanNotifications } from "@/hooks/useAdhanNotifications";
+import { useAppStore } from "@/store";
+import { useQuery } from "@tanstack/react-query";
+import { quranApi } from "@/services/quranApi";
+import { SingleSurahResponse } from "@/types/quran";
 
 interface MobileLayoutProps {
   children: ReactNode;
@@ -44,17 +48,117 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   const { isFocusMode, setIsFocusMode } = useFocusMode();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Run adhan notification hook globally
   useAdhanNotifications();
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const {
+    currentSurahNumber,
+    currentVerseNumber,
+    isPlaying,
+    seekTo,
+    nextVerse,
+    setPlayingStatus,
+    stop,
+    setAudioProgress,
+    onSeekComplete,
+  } = useAppStore();
+
+  const preferences = useAppStore((state) => state.preferences);
+
+  const { data: surahData } = useQuery<SingleSurahResponse>({
+    queryKey: ["surah", currentSurahNumber],
+    queryFn: () => quranApi.getSuratDetail(currentSurahNumber!),
+    enabled: !!currentSurahNumber,
+  });
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (seekTo !== null) {
+      audio.currentTime = seekTo;
+      onSeekComplete();
+    }
+
+    if (isPlaying && currentSurahNumber && currentVerseNumber && surahData) {
+      const verse = (surahData.ayahs || surahData.verses || []).find(
+        (v) => v.number.inSurah === currentVerseNumber
+      );
+      const qari = preferences.selectedQari;
+
+      if (verse && verse.audio[qari]) {
+        const audioUrl = verse.audio[qari];
+        if (audio.src !== audioUrl) {
+          audio.src = audioUrl;
+        }
+        audio.playbackRate = preferences.playbackSpeed;
+        audio.play().catch((err) => {
+          console.error("Audio playback failed:", err);
+          setPlayingStatus(false);
+        });
+      } else {
+        stop();
+      }
+    } else {
+      audio.pause();
+    }
+  }, [
+    isPlaying,
+    currentSurahNumber,
+    currentVerseNumber,
+    surahData,
+    preferences,
+    seekTo,
+    setPlayingStatus,
+    stop,
+    onSeekComplete,
+  ]);
+
+  const handleAudioEnded = () => {
+    if (preferences.isAutoplayEnabled) {
+      if (surahData && currentVerseNumber && currentVerseNumber < surahData.numberOfAyahs) {
+        nextVerse();
+      } else {
+        stop();
+      }
+    } else {
+      stop();
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      setAudioProgress({
+        currentTime: audio.currentTime,
+        duration: audio.duration,
+      });
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      setAudioProgress({
+        currentTime: audio.currentTime,
+        duration: audio.duration,
+      });
+    }
+  };
 
   return (
     <div className="mobile-container">
-      {/* Main content area with bottom padding for navigation */}
+      <audio
+        ref={audioRef}
+        onEnded={handleAudioEnded}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+      />
       <main className={cn("min-h-screen", !isFocusMode && "pb-20")}>
         {children}
       </main>
 
-      {/* Floating Action Menu is always visible, but its content changes based on focus mode */}
       <FloatingActionMenu
         isFocusMode={isFocusMode}
         onFocusToggle={() => setIsFocusMode(!isFocusMode)}
@@ -62,7 +166,6 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
       />
       <BackToTopButton />
 
-      {/* Bottom Navigation and Settings Sheet are hidden in focus mode*/}
       {!isFocusMode && (
         <>
           <SettingsSheet

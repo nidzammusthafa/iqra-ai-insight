@@ -15,8 +15,7 @@ import {
 } from "lucide-react";
 import { AIInsightPanel } from "./AIInsightPanel";
 import { BookmarkDialog } from "../dialogs/BookmarkDialog";
-import { useBookmarks } from "@/hooks/useBookmarks";
-import { useReadingPreferences } from "@/hooks/useReadingPreferences";
+import { useAppStore } from "@/store";
 import { useToast } from "@/hooks/use-toast";
 
 interface VerseCardProps {
@@ -24,24 +23,49 @@ interface VerseCardProps {
   surahNumber: number;
   surahName: string;
   className?: string;
-  isPlaying: boolean;
-  onPlay: () => void;
 }
 
 export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
-  { verse, surahNumber, surahName, className, isPlaying, onPlay },
+  { verse, surahNumber, surahName, className },
   ref
 ) => {
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
 
-  const { preferences, updatePreferences } = useReadingPreferences();
-  const { isBookmarked, getBookmark, addBookmark, removeBookmark, updateBookmark } = useBookmarks();
+  const {
+    preferences,
+    updatePreferences,
+    currentSurahNumber,
+    currentVerseNumber,
+    isPlaying: isAudioPlaying,
+    playVerse,
+    togglePlayPause,
+    isBookmarked,
+    getBookmark,
+    addBookmark,
+    removeBookmark,
+    updateBookmark,
+  } = useAppStore();
   const { toast } = useToast();
 
   const verseNumber = verse.number.inSurah;
   const verseText = verse.arab || verse.text;
   const verseTranslation = verse.translation || verse.translation_id || "";
+
+  // Determine if this specific verse is playing
+  const isPlaying = 
+    isAudioPlaying &&
+    currentSurahNumber === surahNumber &&
+    currentVerseNumber === verseNumber;
+
+  // Define the play handler
+  const handlePlay = () => {
+    if (isPlaying) {
+      togglePlayPause();
+    } else {
+      playVerse(surahNumber, verseNumber);
+    }
+  };
 
   const isCurrentlyBookmarked = isBookmarked(surahNumber, verseNumber);
   const existingBookmark = getBookmark(surahNumber, verseNumber);
@@ -153,7 +177,7 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onPlay}
+                onClick={handlePlay}
                 className={cn("text-muted-foreground hover:text-primary", isPlaying && "text-primary")}
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -258,4 +282,3 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
     </div>
   );
 });
-
