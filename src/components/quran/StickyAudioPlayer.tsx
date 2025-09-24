@@ -1,19 +1,9 @@
 import { Play, Pause, SkipBack, SkipForward, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAppStore } from "@/store";
-
-interface StickyAudioPlayerProps {
-  surahName: string;
-}
+import { useAudioStore } from "@/store/audioSlice";
 
 const formatTime = (seconds: number) => {
   if (isNaN(seconds) || seconds < 0) return "0:00";
@@ -23,76 +13,88 @@ const formatTime = (seconds: number) => {
   return `${min}:${sec < 10 ? "0" : ""}${sec}`;
 };
 
-const PLAYBACK_SPEEDS = [0.75, 1, 1.25, 1.5, 2];
-
-export const StickyAudioPlayer = ({ surahName }: StickyAudioPlayerProps) => {
+export const StickyAudioPlayer = () => {
   const {
     isPlaying,
-    currentVerseNumber,
-    duration,
-    currentTime,
-    preferences,
-    togglePlayPause,
-    nextVerse,
-    prevVerse,
+    currentSurah,
+    currentVerse,
+    audioRef,
+    play,
+    pause,
     stop,
+    playNext,
+    playPrevious,
     seek,
-    updatePreferences,
-  } = useAppStore();
+  } = useAudioStore();
 
-  const handleSpeedChange = (speed: number) => {
-    updatePreferences({ playbackSpeed: speed });
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
+
+  // Effect to sync page navigation
+  useEffect(() => {
+    if (currentSurah) {
+      const pathSurahNumber = parseInt(location.pathname.split('/')[2], 10);
+      if (!isNaN(pathSurahNumber) && pathSurahNumber !== currentSurah.number) {
+        navigate(`/surah/${currentSurah.number}`);
+      }
+    }
+  }, [currentSurah, navigate, location.pathname]);
+
+  // Effect to update time progress
+  useEffect(() => {
+    const audio = audioRef;
+    if (!audio) return;
+
+    const updateProgress = () => {
+      setProgress({
+        currentTime: audio.currentTime,
+        duration: audio.duration,
+      });
+    };
+
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("loadedmetadata", updateProgress);
+
+    return () => {
+      audio.removeEventListener("timeupdate", updateProgress);
+      audio.removeEventListener("loadedmetadata", updateProgress);
+    };
+  }, [audioRef]);
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
+    }
   };
 
+  if (!currentSurah || !currentVerse) {
+    return null;
+  }
+
   return (
-    <div
-      className={cn(
-        "fixed bottom-16 left-0 right-0 z-50",
-        "bg-background/80 backdrop-blur-md border-t",
-        "transition-transform duration-300 ease-in-out",
-        "transform translate-y-0"
-      )}
-    >
+    <div className="fixed bottom-16 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t animate-slide-in-up">
       <div className="container mx-auto px-4 pt-2 pb-1 flex flex-col">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 overflow-hidden">
-            <div className="text-sm">
-              <p className="font-bold truncate text-primary">{surahName}</p>
-              <p className="text-muted-foreground">Ayat {currentVerseNumber}</p>
-            </div>
+          <div className="text-sm">
+            <p className="font-bold truncate text-primary">{currentSurah.name}</p>
+            <p className="text-muted-foreground">Ayat {currentVerse.number.inSurah}</p>
           </div>
 
           <div className="flex items-center space-x-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-16">
-                  {preferences.playbackSpeed}x
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuRadioGroup
-                  value={String(preferences.playbackSpeed)}
-                  onValueChange={(val) => handleSpeedChange(Number(val))}
-                >
-                  {PLAYBACK_SPEEDS.map((speed) => (
-                    <DropdownMenuRadioItem key={speed} value={String(speed)}>
-                      {speed}x
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="ghost" size="icon" onClick={prevVerse}>
+            <Button variant="ghost" size="icon" onClick={playPrevious}>
               <SkipBack className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={togglePlayPause}>
+            <Button variant="ghost" size="icon" onClick={handlePlayPause}>
               {isPlaying ? (
                 <Pause className="h-6 w-6" />
               ) : (
                 <Play className="h-6 w-6" />
               )}
             </Button>
-            <Button variant="ghost" size="icon" onClick={nextVerse}>
+            <Button variant="ghost" size="icon" onClick={playNext}>
               <SkipForward className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="icon" onClick={stop}>
@@ -102,16 +104,16 @@ export const StickyAudioPlayer = ({ surahName }: StickyAudioPlayerProps) => {
         </div>
         <div className="flex items-center space-x-2 mt-1">
           <span className="text-xs text-muted-foreground w-10 text-center">
-            {formatTime(currentTime)}
+            {formatTime(progress.currentTime)}
           </span>
           <Slider
-            value={[currentTime]}
-            max={duration}
+            value={[progress.currentTime]}
+            max={progress.duration || 1}
             step={1}
             onValueChange={(value) => seek(value[0])}
           />
           <span className="text-xs text-muted-foreground w-10 text-center">
-            {formatTime(duration)}
+            {formatTime(progress.duration)}
           </span>
         </div>
       </div>

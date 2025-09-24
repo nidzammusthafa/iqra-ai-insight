@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/select";
 import { Qari, QARIS } from "@/types/quran";
 
+import { useAudioStore } from "@/store/audioSlice";
+
 interface SettingsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,6 +61,13 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
     bookmarks,
     folders,
   } = useAppStore();
+
+  const { 
+    isContinuousPlayEnabled, 
+    toggleContinuousPlay, 
+    isShuffleEnabled, 
+    toggleShuffle 
+  } = useAudioStore();
 
   const [theme, setTheme] = useState<"light" | "dark" | "auto">("auto");
   const [lastReadVerse, setLastReadVerse] = useState<{
@@ -295,43 +304,37 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <PlayCircle className="w-5 h-5" />
-                  <span>Preferensi Audio</span>
+                  <span>Preferensi Audio Lanjutan</span>
                 </CardTitle>
                 <CardDescription>
-                  Atur pemutaran audio otomatis (autoplay)
+                  Atur perilaku pemutar audio global.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Autoplay Ayat Berikutnya</p>
+                    <p className="font-medium">Pemutaran Berkelanjutan</p>
                     <p className="text-sm text-muted-foreground">
-                      Lanjutkan pemutaran ke ayat berikutnya secara otomatis.
+                      Lanjut otomatis ke surah berikutnya.
                     </p>
                   </div>
                   <Switch
-                    checked={preferences.isAutoplayEnabled}
-                    onCheckedChange={(checked) =>
-                      updatePreferences({ isAutoplayEnabled: checked })
-                    }
+                    checked={isContinuousPlayEnabled}
+                    onCheckedChange={toggleContinuousPlay}
                   />
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Jeda Antar Ayat</p>
-                    <span className="text-sm font-medium text-primary">
-                      {preferences.autoplayDelay} detik
-                    </span>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Mode Acak (Shuffle)</p>
+                    <p className="text-sm text-muted-foreground">
+                      Pilih surah berikutnya secara acak.
+                    </p>
                   </div>
-                  <Slider
-                    value={[preferences.autoplayDelay]}
-                    onValueChange={(value) =>
-                      updatePreferences({ autoplayDelay: value[0] })
-                    }
-                    min={0}
-                    max={10}
-                    step={1}
-                    disabled={!preferences.isAutoplayEnabled}
+                  <Switch
+                    checked={isShuffleEnabled}
+                    onCheckedChange={toggleShuffle}
+                    disabled={!isContinuousPlayEnabled}
                   />
                 </div>
               </CardContent>

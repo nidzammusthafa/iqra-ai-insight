@@ -20,7 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFocusMode } from "@/hooks/useFocusModeHook";
-import { useAppStore } from "@/store";
+import { useAudioStore } from "@/store/audioSlice";
 import { SingleSurahResponse } from "@/types/quran";
 
 export const SurahDetail = () => {
@@ -28,8 +28,8 @@ export const SurahDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Get global audio state to decide when to show the player and scroll
-  const { currentSurahNumber, currentVerseNumber, isPlaying } = useAppStore();
+  // Get global audio state from the dedicated audio store
+  const { isPlaying, currentSurah, currentVerse } = useAudioStore();
 
   const verseRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
   const [isJumpDialogOpen, setIsJumpDialogOpen] = useState(false);
@@ -58,14 +58,14 @@ export const SurahDetail = () => {
 
   // Effect to scroll the currently playing verse into view
   useEffect(() => {
-    if (isPlaying && currentSurahNumber === surahNum && currentVerseNumber) {
-      const verseRef = verseRefs.current[currentVerseNumber - 1];
+    if (isPlaying && currentSurah?.number === surahNum && currentVerse) {
+      const verseRef = verseRefs.current[currentVerse.number.inSurah - 1];
       verseRef?.current?.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
     }
-  }, [isPlaying, currentSurahNumber, currentVerseNumber, surahNum]);
+  }, [isPlaying, currentSurah, currentVerse, surahNum]);
 
   const handleJumpToVerse = (verseNumber: number) => {
     const element = document.getElementById(`verse-${verseNumber}`);
@@ -232,10 +232,6 @@ export const SurahDetail = () => {
         <JumpToVerseDialog open={isJumpDialogOpen} onOpenChange={setIsJumpDialogOpen} maxVerse={surah.numberOfAyahs} onJump={handleJumpToVerse} />
       )}
 
-      {/* Sticky Audio Player UI now appears based on global state */}
-      {currentSurahNumber && surah && (
-        <StickyAudioPlayer surahName={surah.name} />
-      )}
 
       {/* Content */}
       <div className="p-4">
@@ -283,6 +279,7 @@ export const SurahDetail = () => {
                   key={verse.number.inSurah}
                   verse={verse}
                   surahNumber={surah.number}
+                  surah={surah}
                   surahName={surah.name}
                 />
               ))}

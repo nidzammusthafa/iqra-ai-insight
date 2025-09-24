@@ -1,5 +1,5 @@
 import { useState, forwardRef } from "react";
-import { Verse } from "@/types/quran";
+import { Verse, SingleSurahResponse } from "@/types/quran";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,53 +17,44 @@ import { AIInsightPanel } from "./AIInsightPanel";
 import { BookmarkDialog } from "../dialogs/BookmarkDialog";
 import { useAppStore } from "@/store";
 import { useToast } from "@/hooks/use-toast";
+import { useAudioStore } from "@/store/audioSlice";
 
 interface VerseCardProps {
   verse: Verse;
+  surah: SingleSurahResponse;
   surahNumber: number;
   surahName: string;
   className?: string;
 }
 
 export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
-  { verse, surahNumber, surahName, className },
+  { verse, surah, surahNumber, surahName, className },
   ref
 ) => {
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
 
-  const {
-    preferences,
-    updatePreferences,
-    currentSurahNumber,
-    currentVerseNumber,
-    isPlaying: isAudioPlaying,
-    playVerse,
-    togglePlayPause,
-    isBookmarked,
-    getBookmark,
-    addBookmark,
-    removeBookmark,
-    updateBookmark,
-  } = useAppStore();
+  const { preferences, updatePreferences, isBookmarked, getBookmark, addBookmark, removeBookmark, updateBookmark } = useAppStore();
   const { toast } = useToast();
+
+  const {
+    isPlaying: isAudioPlaying,
+    currentVerse,
+    setVerse,
+    pause,
+  } = useAudioStore();
 
   const verseNumber = verse.number.inSurah;
   const verseText = verse.arab || verse.text;
   const verseTranslation = verse.translation || verse.translation_id || "";
 
-  // Determine if this specific verse is playing
-  const isPlaying = 
-    isAudioPlaying &&
-    currentSurahNumber === surahNumber &&
-    currentVerseNumber === verseNumber;
+  const isPlaying = isAudioPlaying && currentVerse?.number.inSurah === verseNumber && currentVerse?.number.inQuran === verse.number.inQuran;
 
-  // Define the play handler
   const handlePlay = () => {
     if (isPlaying) {
-      togglePlayPause();
+      pause();
     } else {
-      playVerse(surahNumber, verseNumber);
+      setVerse(surah, verse);
     }
   };
 

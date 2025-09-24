@@ -1,28 +1,28 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { PreferencesSlice, createPreferencesSlice } from './preferencesSlice';
-import { AudioSlice, createAudioSlice } from './audioSlice';
 import { BookmarkSlice, createBookmarkSlice } from './bookmarkSlice';
 
-type AppState = PreferencesSlice & AudioSlice & BookmarkSlice;
+// The main app state now only includes persisted slices.
+// Audio state is managed in its own separate store (useAudioStore).
+type AppState = PreferencesSlice & BookmarkSlice;
 
 export const useAppStore = create<AppState>()(
   persist(
     (...a) => ({
       ...createPreferencesSlice(...a),
-      ...createAudioSlice(...a),
       ...createBookmarkSlice(...a),
     }),
     {
       name: 'quran-app-store', // A single key for the persisted state
       storage: createJSONStorage(() => localStorage),
-      // Persist preferences and bookmarks, but not audio state
+      // Persist only preferences and bookmarks.
       partialize: (state) => ({
         preferences: state.preferences,
         bookmarks: state.bookmarks,
         folders: state.folders,
       }),
-      // Custom merge function to handle nested preferences and also new fields in the root
+      // Custom merge function to handle nested preferences.
       merge: (persistedState, currentState) => {
         const merged = { ...currentState, ...(persistedState as object) };
         if ((persistedState as PreferencesSlice)?.preferences) {
