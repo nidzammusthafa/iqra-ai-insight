@@ -1,5 +1,5 @@
 import { Play, Pause, SkipBack, SkipForward, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -28,15 +28,18 @@ export const StickyAudioPlayer = () => {
   } = useAudioStore();
 
   const navigate = useNavigate();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
+  const prevSurahRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Only sync navigation if we are in surah view to avoid conflicts with page/juz modes
-    if (currentSurah && location.pathname.startsWith('/surah/')) {
+    if (currentSurah && prevSurahRef.current !== currentSurah.number) {
+      if (pathname.startsWith('/surah/')) {
         navigate(`/surah/${currentSurah.number}`);
+      }
     }
-  }, [currentSurah, navigate]);
+    prevSurahRef.current = currentSurah ? currentSurah.number : null;
+  }, [currentSurah, navigate, pathname]);
 
   // Effect to update time progress
   useEffect(() => {
