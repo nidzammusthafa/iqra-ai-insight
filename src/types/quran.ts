@@ -254,3 +254,27 @@ export type ApiListResponse<T> = {
     per_page: number;
   };
 };
+
+// Tipe untuk ayat dalam konteks halaman
+export interface PageVerse {
+  number: {
+    inQuran: number;
+    inSurah: number;
+  };
+  arab: string;
+  translation: string;
+  audio?: { [key: string]: string }; // Made optional as it's not in the fetched data
+}
+
+// Tipe untuk surah dalam konteks halaman
+export interface SurahInPage {
+  number: number;
+  name: string;
+  translation: string;
+  revelation: string;
+  numberOfAyahs: number;
+  ayahs: PageVerse[];
+}
+
+// Tipe untuk respons API halaman
+export type PageResponse = SurahInPage[];

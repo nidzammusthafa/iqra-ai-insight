@@ -156,7 +156,7 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
       ref={ref}
       id={`verse-${verseNumber}`}
       className={cn(
-        "verse-card space-y-4 p-4 rounded-lg transition-colors duration-300",
+        "verse-card space-y-4 p-4 rounded-lg transition-colors duration-300 border-b",
         isPlaying && "bg-primary-light/50",
         className
       )}

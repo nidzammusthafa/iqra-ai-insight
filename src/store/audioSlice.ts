@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { SingleSurahResponse, Verse, Qari, QARIS } from '@/types/quran';
+import { SingleSurahResponse, Verse, Qari, QARIS, PageVerse } from '@/types/quran';
 import { quranApi } from '@/services/quranApi';
 
 interface AudioState {
@@ -10,7 +10,9 @@ interface AudioState {
   isContinuousPlayEnabled: boolean;
   isShuffleEnabled: boolean;
   audioRef: HTMLAudioElement | null;
-}
+  playbackMode: 'surah' | 'page';
+  pageVerseQueue: { verse: PageVerse, surahNumber: number }[] | null;
+} 
 
 interface AudioActions {
   play: () => void;
@@ -24,148 +26,78 @@ interface AudioActions {
   toggleShuffle: () => void;
   setQari: (qari: Qari) => void;
   seek: (time: number) => void;
+  playPage: (items: { verse: PageVerse, surahNumber: number }[]) => Promise<void>;
+  playNextInPageQueue: () => Promise<void>;
 }
 
 export const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
-  isPlaying: false,
-  currentSurah: null,
-  currentVerse: null,
-  currentQari: QARIS[0],
-  isContinuousPlayEnabled: true, // Default to true for better UX
-  isShuffleEnabled: false,
-  audioRef: null,
+  // ... (existing state)
+  playbackMode: 'surah',
+  pageVerseQueue: null,
+  currentPageQueueIndex: -1,
 
-  setAudioRef: (ref) => {
-    const { playNext } = get();
-    if (ref) {
-      ref.onended = playNext; // Attach the event listener here
-    }
-    set({ audioRef: ref });
-  },
+  // ... (existing actions)
 
-  play: () => {
-    const { audioRef } = get();
-    if (audioRef?.src) {
-      audioRef.play();
-      set({ isPlaying: true });
-    }
-  },
+  playPage: async (items) => {
+    if (items.length === 0) return;
+    set({ 
+      playbackMode: 'page', 
+      pageVerseQueue: items, 
+      currentPageQueueIndex: 0 
+    });
 
-  pause: () => {
-    const { audioRef } = get();
-    if (audioRef) {
-      audioRef.pause();
-      set({ isPlaying: false });
-    }
-  },
+    const { setVerse, stop } = get();
+    const firstItem = items[0];
+    
+    try {
+      const surahData = await quranApi.getSuratDetail(firstItem.surahNumber);
+      const fullVerseData = surahData.ayahs.find(v => v.number.inQuran === firstItem.verse.number.inQuran);
 
-  stop: () => {
-    get().pause();
-    set({ currentSurah: null, currentVerse: null });
-  },
-
-  setVerse: (surah, verse, options = {}) => {
-    const { audioRef, currentQari, playNext } = get();
-    set({ currentSurah: surah, currentVerse: verse });
-
-    if (audioRef) {
-      audioRef.onended = playNext; // Ensure default handler is set
-
-      const isNewSurah = options.isNewSurah || false;
-      const isBasmalahRequired = isNewSurah && verse.number.inSurah === 1 && surah.number !== 1 && surah.number !== 9;
-
-      if (isBasmalahRequired) {
-        const basmalahUrl = surah.bismillah.audio[currentQari];
-        audioRef.src = basmalahUrl;
-        audioRef.play();
-        set({ isPlaying: true });
-
-        // When basmalah ends, play the actual verse
-        audioRef.onended = () => {
-          const { currentVerse: latestVerse, currentQari: latestQari } = get();
-          if (latestVerse) {
-            audioRef.src = latestVerse.audio[latestQari];
-            audioRef.play();
-            audioRef.onended = playNext; // Reset to default handler
-          }
-        };
+      if (fullVerseData) {
+        setVerse(surahData, fullVerseData, { isNewSurah: true });
       } else {
-        const audioUrl = verse.audio[currentQari];
-        if (audioRef.src !== audioUrl) {
-          audioRef.src = audioUrl;
-        }
-        audioRef.play();
-        set({ isPlaying: true });
+        stop();
       }
+    } catch (error) {
+      console.error("Failed to start page playback:", error);
+      stop();
     }
   },
 
-  playNext: async () => {
-    const { currentSurah, currentVerse, isContinuousPlayEnabled, isShuffleEnabled, setVerse } = get();
-    if (!currentSurah || !currentVerse) return;
+  playNextInPageQueue: async () => {
+    const { pageVerseQueue, currentPageQueueIndex, stop, setVerse } = get();
+    if (!pageVerseQueue) {
+      stop();
+      return;
+    }
 
-    const verses = currentSurah.ayahs || currentSurah.verses || [];
-    const currentVerseIndex = verses.findIndex(v => v.number.inSurah === currentVerse.number.inSurah);
+    const nextIndex = currentPageQueueIndex + 1;
+    if (nextIndex >= pageVerseQueue.length) {
+      stop();
+      return;
+    }
 
-    if (currentVerseIndex < verses.length - 1) {
-      // Play next verse in the same surah
-      const nextVerse = verses[currentVerseIndex + 1];
-      setVerse(currentSurah, nextVerse);
-    } else {
-      // It's the last verse
-      if (!isContinuousPlayEnabled) {
-        get().stop();
-        return;
-      }
+    set({ currentPageQueueIndex: nextIndex });
+    const nextItem = pageVerseQueue[nextIndex];
 
-      let nextSurahNumber;
-      if (isShuffleEnabled) {
-        nextSurahNumber = Math.floor(Math.random() * 114) + 1;
+    try {
+      const currentSurah = get().currentSurah;
+      
+      if (currentSurah?.number !== nextItem.surahNumber) {
+        const surahData = await quranApi.getSuratDetail(nextItem.surahNumber);
+        const fullVerseData = surahData.ayahs.find(v => v.number.inQuran === nextItem.verse.number.inQuran);
+        if (fullVerseData) {
+          setVerse(surahData, fullVerseData, { isNewSurah: true });
+        } else { stop(); }
       } else {
-        nextSurahNumber = currentSurah.number + 1;
+        const fullVerseData = currentSurah.ayahs.find(v => v.number.inQuran === nextItem.verse.number.inQuran);
+        if (fullVerseData) {
+          setVerse(currentSurah, fullVerseData);
+        } else { stop(); }
       }
-
-      if (nextSurahNumber > 114) {
-        get().stop();
-        return;
-      }
-
-      try {
-        const nextSurahData = await quranApi.getSuratDetail(nextSurahNumber);
-        const firstVerse = (nextSurahData.ayahs || nextSurahData.verses || [])[0];
-        setVerse(nextSurahData, firstVerse, { isNewSurah: true });
-      } catch (error) {
-        console.error("Failed to load next surah:", error);
-        get().stop();
-      }
-    }
-  },
-
-  playPrevious: async () => {
-    const { currentSurah, currentVerse, setVerse } = get();
-    if (!currentSurah || !currentVerse) return;
-
-    const verses = currentSurah.ayahs || currentSurah.verses || [];
-    const currentVerseIndex = verses.findIndex(v => v.number.inSurah === currentVerse.number.inSurah);
-
-    if (currentVerseIndex > 0) {
-      // Play previous verse in the same surah
-      const prevVerse = verses[currentVerseIndex - 1];
-      setVerse(currentSurah, prevVerse);
-    } else {
-      // It's the first verse, go to previous surah
-      const prevSurahNumber = currentSurah.number - 1;
-      if (prevSurahNumber < 1) return; // No previous surah
-
-      try {
-        const prevSurahData = await quranApi.getSuratDetail(prevSurahNumber);
-        const prevVerses = prevSurahData.ayahs || prevSurahData.verses || [];
-        const lastVerse = prevVerses[prevVerses.length - 1];
-        setVerse(prevSurahData, lastVerse, { isNewSurah: true });
-      } catch (error) {
-        console.error("Failed to load previous surah:", error);
-        get().stop();
-      }
+    } catch (error) {
+      console.error("Failed to play next in page queue:", error);
+      stop();
     }
   },
 
@@ -175,7 +107,6 @@ export const useAudioStore = create<AudioState & AudioActions>((set, get) => ({
   
   setQari: (qari) => {
     set({ currentQari: qari });
-    // If a verse is playing, reload the audio with the new qari
     const { currentSurah, currentVerse, setVerse } = get();
     if (currentSurah && currentVerse) {
       setVerse(currentSurah, currentVerse);
