@@ -81,7 +81,7 @@ export const SearchPage = () => {
 
   const { data: allSurahs } = useQuery<SurahListItem[]>({
     queryKey: ["allSurahs"],
-    queryFn: () => quranApi.getAllSurats(),
+    queryFn: () => quranApi.getSuratList(),
   });
 
   // Fungsi utilitas untuk memvalidasi hasil pencarian

@@ -18,10 +18,11 @@ import { BookmarkDialog } from "../dialogs/BookmarkDialog";
 import { useAppStore } from "@/store";
 import { useToast } from "@/hooks/use-toast";
 import { useAudioStore } from "@/store/audioSlice";
+import { quranApi } from "@/services/quranApi";
 
 interface VerseCardProps {
   verse: Verse;
-  surah: SingleSurahResponse;
+  surah: Partial<SingleSurahResponse>; // Allow partial surah object
   surahNumber: number;
   surahName: string;
   className?: string;
@@ -48,13 +49,25 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
   const verseText = verse.arab || verse.text;
   const verseTranslation = verse.translation || verse.translation_id || "";
 
-  const isPlaying = isAudioPlaying && currentVerse?.number.inSurah === verseNumber && currentVerse?.number.inQuran === verse.number.inQuran;
+  const isPlaying = isAudioPlaying && currentVerse?.number.inQuran === verse.number.inQuran;
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     if (isPlaying) {
       pause();
     } else {
-      setVerse(surah, verse);
+      // Check if we have the full surah details (e.g., bismillah property)
+      // If not, fetch the full details first.
+      if (!surah.bismillah) {
+        try {
+          const fullSurahData = await quranApi.getSuratDetail(surahNumber);
+          setVerse(fullSurahData, verse);
+        } catch (error) {
+          toast({ title: "Error", description: "Gagal memuat data audio surah." });
+        }
+      } else {
+        // We already have the full data
+        setVerse(surah as SingleSurahResponse, verse);
+      }
     }
   };
 

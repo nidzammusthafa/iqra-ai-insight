@@ -1,53 +1,77 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  ApiResponse,
-  SuratResponse,
-  OneSuratResponse,
-  HaditsPerawi,
-  Hadits,
-  TranslationId,
   SurahListItem,
   SingleSurahResponse,
+  TranslationId,
+  ApiResponse,
 } from "@/types/quran";
 
-const BASE_URL = "https://quran-api2.vercel.app/api";
-const SURAHS_API_URL = "https://quran-api-id-kappa.vercel.app";
+// Base URL sesuai dengan dokumentasi API yang baru
+const BASE_URL = "https://quran-api-id-kappa.vercel.app";
+const LEGACY_SEARCH_API_URL = "https://quran-api2.vercel.app/api";
 
 class QuranApiService {
-  // Get list of all surahs
+  /**
+   * Mengambil daftar ringkas semua 114 surah.
+   * @returns {Promise<SurahListItem[]>} Daftar surah.
+   */
   async getSuratList(): Promise<SurahListItem[]> {
-    const response = await fetch(`${SURAHS_API_URL}/surahs`);
+    const response = await fetch(`${BASE_URL}/surahs`);
     if (!response.ok) {
-      throw new Error("Failed to fetch surat list");
+      throw new Error("Failed to fetch surah list");
     }
     const data: SurahListItem[] = await response.json();
     return data;
   }
 
-  // Alias for getAllSurats
-  async getAllSurats(): Promise<SurahListItem[]> {
-    return this.getSuratList();
-  }
-
-  // Get detailed surah with verses
-  async getSuratDetail(
-    suratNumber: number,
-    translationId: TranslationId = TranslationId.ID
-  ): Promise<SingleSurahResponse> {
-    const response = await fetch(`${SURAHS_API_URL}/surahs/${suratNumber}`);
+  /**
+   * Mengambil detail informasi dari satu surah spesifik, termasuk seluruh ayat di dalamnya.
+   * @param {number} surahNumber - Nomor urut surah (1-114).
+   * @returns {Promise<SingleSurahResponse>} Detail surah.
+   */
+  async getSuratDetail(surahNumber: number): Promise<SingleSurahResponse> {
+    const response = await fetch(`${BASE_URL}/surahs/${surahNumber}`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch surah ${suratNumber}`);
+      throw new Error(`Failed to fetch surah ${surahNumber}`);
     }
     const data: SingleSurahResponse = await response.json();
     return data;
   }
 
-  // Search verses globally
+  /**
+   * Mengambil semua ayat dalam juz tertentu.
+   * @param {number} juzNumber - Nomor juz (1-30).
+   * @returns {Promise<any>} Data juz.
+   */
+  async getJuz(juzNumber: number): Promise<any> {
+    // Ganti 'any' dengan tipe data yang lebih spesifik jika sudah dibuat
+    const response = await fetch(`${BASE_URL}/juz/${juzNumber}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch juz ${juzNumber}`);
+    }
+    return response.json();
+  }
+
+  /**
+   * Mengambil semua ayat dalam halaman tertentu.
+   * @param {number} pageNumber - Nomor halaman (1-604).
+   * @returns {Promise<any>} Data halaman.
+   */
+  async getPage(pageNumber: number): Promise<any> {
+    // Ganti 'any' dengan tipe data yang lebih spesifik jika sudah dibuat
+    const response = await fetch(`${BASE_URL}/pages/${pageNumber}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch page ${pageNumber}`);
+    }
+    return response.json();
+  }
+
+  // Search verses globally (Legacy API)
   async searchVerses(
     query: string,
     translationId: TranslationId = TranslationId.ID,
     page: number = 1,
-    size: number = 10
+    size: number = 50
   ): Promise<any[]> {
     const params = new URLSearchParams({
       terjemah: query,
@@ -56,7 +80,7 @@ class QuranApiService {
     });
 
     const response = await fetch(
-      `${BASE_URL}/${translationId}/surat?${params}`
+      `${LEGACY_SEARCH_API_URL}/${translationId}/surat?${params}`
     );
     if (!response.ok) {
       throw new Error("Failed to search verses");
@@ -65,7 +89,7 @@ class QuranApiService {
     return data.data;
   }
 
-  // Search surahs by name
+  // Search surahs by name (Legacy API)
   async searchSurats(
     query: string,
     translationId: TranslationId = TranslationId.ID
@@ -75,86 +99,12 @@ class QuranApiService {
     });
 
     const response = await fetch(
-      `${BASE_URL}/${translationId}/surat?${params}`
+      `${LEGACY_SEARCH_API_URL}/${translationId}/surat?${params}`
     );
     if (!response.ok) {
       throw new Error("Failed to search surahs");
     }
     const data: ApiResponse<any[]> = await response.json();
-    return data.data;
-  }
-
-  // Search verses within a specific surah
-  async searchVersesInSurah(
-    suratNumber: number,
-    query: string,
-    translationId: TranslationId = TranslationId.ID,
-    page: number = 1,
-    size: number = 10
-  ): Promise<any[]> {
-    const params = new URLSearchParams({
-      query,
-      page: page.toString(),
-      size: size.toString(),
-    });
-
-    const response = await fetch(
-      `${BASE_URL}/${translationId}/surat/ayat/${suratNumber}?${params}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to search verses in surah");
-    }
-    const data: ApiResponse<any[]> = await response.json();
-    return data.data;
-  }
-
-  // Get hadits narrator info
-  async getHaditsPerawiInfo(
-    translationId: TranslationId = TranslationId.ID
-  ): Promise<HaditsPerawi[]> {
-    const response = await fetch(`${BASE_URL}/${translationId}/hadits/info`);
-    if (!response.ok) {
-      throw new Error("Failed to fetch hadits perawi info");
-    }
-    const data: ApiResponse<HaditsPerawi[]> = await response.json();
-    return data.data;
-  }
-
-  // Get hadits by narrator
-  async getHaditsByPerawi(
-    rawi: string,
-    page: number = 1,
-    size: number = 10,
-    translationId: TranslationId = TranslationId.ID
-  ): Promise<Hadits[]> {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      size: size.toString(),
-    });
-
-    const response = await fetch(
-      `${BASE_URL}/${translationId}/hadits/${rawi}?${params}`
-    );
-    if (!response.ok) {
-      throw new Error(`Failed to fetch hadits by ${rawi}`);
-    }
-    const data: ApiResponse<Hadits[]> = await response.json();
-    return data.data;
-  }
-
-  // Get specific hadits
-  async getHaditsDetail(
-    rawi: string,
-    haditsNumber: number,
-    translationId: TranslationId = TranslationId.ID
-  ): Promise<Hadits> {
-    const response = await fetch(
-      `${BASE_URL}/${translationId}/hadits/${rawi}/${haditsNumber}`
-    );
-    if (!response.ok) {
-      throw new Error(`Failed to fetch hadits ${haditsNumber} from ${rawi}`);
-    }
-    const data: ApiResponse<Hadits> = await response.json();
     return data.data;
   }
 }

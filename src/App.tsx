@@ -17,31 +17,46 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <FocusModeProvider>
-          <MobileLayout>
-            <Routes>
-              <Route path="/" element={<QuranHome />} />
-              <Route path="/surah/:surahNumber" element={<SurahDetail />} />
-              <Route path="/hadits" element={<HaditsHome />} />
-              <Route path="/hadits/:rawi" element={<HadithList />} />
-              <Route path="/hadits/:rawi/:haditsNumber" element={<HadithDetail />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/qibla" element={<QiblaPage />} />
-              <Route path="/prayer-times" element={<PrayerTimesPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </MobileLayout>
-        </FocusModeProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+import { QuranPageView } from "./pages/QuranPageView";
+import { JuzDetail } from "./pages/JuzDetail";
+import { StickyAudioPlayer } from "./components/quran/StickyAudioPlayer";
+import { useAudioStore } from "./store/audioSlice";
+
+const App = () => {
+  const { currentSurah } = useAudioStore();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <FocusModeProvider>
+            <MobileLayout>
+              <Routes>
+                <Route path="/" element={<QuranHome />} />
+                <Route path="/surah/:surahNumber" element={<SurahDetail />} />
+                <Route path="/juz/:juzNumber" element={<JuzDetail />} />
+                <Route path="/page/:pageNumber" element={<QuranPageView />} />
+                <Route path="/hadits" element={<HaditsHome />} />
+                <Route path="/hadits/:rawi" element={<HadithList />} />
+                <Route
+                  path="/hadits/:rawi/:haditsNumber"
+                  element={<HadithDetail />}
+                />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/qibla" element={<QiblaPage />} />
+                <Route path="/prayer-times" element={<PrayerTimesPage />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              {currentSurah && <StickyAudioPlayer />}
+            </MobileLayout>
+          </FocusModeProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

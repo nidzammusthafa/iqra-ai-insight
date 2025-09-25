@@ -1,68 +1,62 @@
-# Rencana Fitur Mode Halaman (Mushaf View)
+# Rencana Peningkatan Mode Halaman (Mushaf View) dan UI Global
 
 ## 1. Tujuan
 
-Menyediakan pengalaman membaca Al-Qur'an yang otentik dan imersif dengan meniru tata letak halaman dari mushaf cetak. Fitur ini memungkinkan pengguna untuk membaca Al-Qur'an per halaman, tidak lagi per ayat dalam daftar vertikal, serta menyediakan navigasi berbasis halaman dan juz.
+Meningkatkan pengalaman membaca dalam mode Halaman (Mushaf) agar lebih otentik, informatif, dan fungsional. Selain itu, rencana ini juga mencakup penyempurnaan estetika visual pada semua mode baca untuk meningkatkan kejelasan dan keindahan antarmuka.
 
-## 2. Prasyarat Kritis: Data API
+## 2. Rencana Implementasi Teknis
 
-- **Kebutuhan:** Implementasi fitur ini sangat bergantung pada ketersediaan data per halaman.
-- **Sumber Data:** API `quran-api-id` yang didokumentasikan di `API_DOCUMENTATION.md` menyediakan endpoint `/pages/{pageNumber}`. Endpoint ini akan menjadi tulang punggung fitur ini.
+### a. Peningkatan Header & Footer Halaman (Mode Halaman)
 
-## 3. Rencana Implementasi Teknis
+- **Tujuan:** Menampilkan informasi halaman dan surah dengan gaya yang khas dan informatif.
+- **Implementasi:**
+  1.  **Nomor Halaman Kaligrafi:**
+      - **UI:** Di bagian footer atau header halaman, tampilkan nomor halaman saat ini.
+      - **Styling:** Gunakan font kaligrafi Arab khusus untuk nomor halaman dan tulis nomornya menggunakan angka Arab (١, ٢, ٣, ...).
+  2.  **Informasi Surah Dinamis:**
+      - **UI:** Di bagian header halaman, tampilkan nama dan nomor surah.
+      - **Logika:**
+        - Data dari API `/pages/{pageNumber}` sudah mengelompokkan ayat per surah.
+        - Ambil nama surah dari `surah.name.short` (Arab) dan `surah.name.transliteration.id` (Latin).
+        - Ambil nomor surah dari `surah.number`.
+        - **Aturan Multi-Surah:** Jika halaman berisi ayat dari lebih dari satu surah (misalnya di akhir surah dan awal surah berikutnya), header akan menampilkan informasi untuk **surah kedua** yang muncul di halaman tersebut, sesuai permintaan.
+      - **Tampilan Ganda:** Tampilkan nama surah dalam tulisan Arab dan Latin secara bersamaan untuk kejelasan.
 
-### a. Pengalihan Mode Tampilan (View Switching)
+### b. Navigasi "Lompat ke Halaman"
 
-- **UI:** Di header halaman `SurahDetail`, tambahkan komponen `ToggleGroup` atau `Tabs` dengan dua pilihan: "Daftar" (mode saat ini) dan "Halaman".
-- **State:** Kelola state mode tampilan ini di level halaman `SurahDetail`.
+- **Tujuan:** Memungkinkan pengguna untuk berpindah ke halaman spesifik dengan cepat.
+- **Implementasi:**
+  1.  **UI:** Tambahkan tombol ikon baru di header `QuranPageView.tsx`.
+  2.  **Komponen:** Buat komponen `Dialog` baru, `JumpToPageDialog.tsx`, yang mirip dengan `JumpToVerseDialog.tsx`.
+  3.  **Fungsionalitas:**
+      - Dialog akan berisi satu `Input` untuk memasukkan nomor halaman (dengan validasi antara 1-604).
+      - Saat tombol "Lompat" diklik, perbarui state `currentPageNumber` di `QuranPageView.tsx` dan picu pengambilan data untuk halaman baru.
 
-### b. Komponen Baru: `QuranPageView.tsx`
+### c. Fitur Terjemahan Satu Halaman
 
-- **Tujuan:** Komponen utama yang bertanggung jawab untuk merender satu halaman penuh mushaf.
-- **State Internal:** `currentPageNumber`.
-- **Logika:**
-  1.  Berdasarkan `currentPageNumber`, komponen akan memanggil endpoint `/pages/{currentPageNumber}` untuk mendapatkan semua ayat di halaman tersebut.
-  2.  Merender ayat-ayat tersebut sesuai desain.
+- **Tujuan:** Memberikan opsi untuk melihat terjemahan dari semua ayat dalam satu halaman secara bersamaan.
+- **Implementasi:**
+  1.  **UI:** Tambahkan tombol "Tampilkan Terjemahan Halaman" di suatu tempat di dalam `QuranPageView.tsx` (misalnya, di dekat header atau sebagai aksi mengambang).
+  2.  **State Management:** Gunakan state lokal di dalam `QuranPageView.tsx`, misalnya `const [isTranslationVisible, setIsTranslationVisible] = useState(false);`.
+  3.  **Logika Rendering:**
+      - Saat tombol diklik, `setIsTranslationVisible(true)`.
+      - Buat dua tampilan berbeda yang dirender secara kondisional:
+        - **Jika `isTranslationVisible` adalah `false` (default):** Render teks Arab seperti biasa dalam format halaman mushaf.
+        - **Jika `isTranslationVisible` adalah `true`:** Render sebuah daftar vertikal yang berisi teks terjemahan (`verse.translation.id`) untuk setiap ayat di halaman tersebut. Tampilan ini tidak perlu mengikuti layout mushaf.
+  4.  **Sifat Non-Persisten:** State `isTranslationVisible` ini harus bersifat lokal dan tidak persisten. Setiap kali pengguna menavigasi ke halaman baru (maju atau mundur), tampilan harus selalu kembali ke teks Arab secara default.
 
-### c. Desain & Styling Tampilan Halaman
+### d. [Global] Garis Pemisah Ayat
 
-1.  **Layout Ayat:**
-    - Gunakan `div` sebagai kontainer halaman dengan `display: flex`, `flex-direction: row-reverse`, dan `flex-wrap: wrap` untuk alur dari kanan ke kiri.
-    - Setiap ayat akan menjadi `span` atau `div` inline.
-    - **Nomor Ayat:** Di antara setiap ayat, render nomor ayat yang dihiasi dengan ornamen kaligrafi (bisa berupa SVG atau gambar yang ditempatkan menggunakan CSS).
-2.  **Tampilan Terjemahan Satu Halaman:**
-    - **Opsi Desain:** Di bawah kontainer halaman, sediakan tombol "Tampilkan Terjemahan Halaman Ini".
-    - **Interaksi:** Saat tombol diklik, buka komponen `Collapsible` atau `Accordion` yang berisi daftar terjemahan untuk semua ayat di halaman tersebut, diurutkan berdasarkan nomor ayat.
-3.  **Penanda Juz & Surah:**
-    - **API Data:** Data dari endpoint `/pages/{pageNumber}` sudah mengelompokkan ayat per surah dan menyertakan metadata `juz`.
-    - **Logika:** Sebelum merender ayat, periksa apakah ayat tersebut adalah yang pertama di halaman atau jika nomor `juz` atau `surah`-nya berbeda dari ayat sebelumnya. Jika ya, render sebuah header atau penanda visual yang jelas (misalnya, nama surah atau penanda "Awal Juz X").
+- **Tujuan:** Menambahkan pemisah visual di bawah setiap baris atau ayat untuk meningkatkan keterbacaan di semua mode.
+- **Implementasi:**
+  - **Mode Surah & Juz:** Di dalam `src/components/quran/VerseCard.tsx`, tambahkan komponen `<Separator />` atau `div` dengan `border-b` di bagian paling bawah dari `Card`.
+  - **Mode Halaman:** Di dalam `QuranPageView.tsx`, saat me-render setiap ayat, pastikan ada elemen pemisah visual di antara baris-barisnya. Ini bisa berupa `border` atau `box-shadow` yang halus.
 
-### d. Fungsionalitas & Navigasi
+## 3. Langkah-langkah Pengerjaan
 
-1.  **Aksi per Halaman:**
-    - Sediakan menu atau tombol untuk aksi berikut:
-      - **Putar Audio Halaman:** Memutar semua ayat di halaman secara berurutan.
-      - **Bookmark Halaman:** Menyimpan nomor halaman sebagai bookmark.
-      - **Salin Teks Halaman:** Menyalin semua teks Arab di halaman tersebut.
-2.  **Navigasi Halaman:**
-    - Sediakan tombol panah Kiri/Kanan untuk berpindah halaman (`currentPageNumber +/- 1`).
-    - Implementasikan gestur geser (swipe left/right) untuk berpindah halaman.
-    - Pergantian halaman tidak dibatasi oleh surat, sesuai dengan tata letak mushaf.
-3.  **Navigasi Audio-driven:**
-    - Jika pemutar audio global sedang aktif dan berpindah ke ayat yang ada di halaman lain, komponen `QuranPageView` harus mendengarkan perubahan state audio global dan secara otomatis mengubah `currentPageNumber` agar sesuai.
-4.  **Lompat ke Halaman/Juz:**
-    - Buat `Dialog` baru (`JumpToPageDialog.tsx`).
-    - Dialog ini berisi `Input` untuk nomor halaman dan `Select` untuk memilih Juz (1-30).
-    - Saat dipilih, cari halaman awal dari Juz tersebut (memerlukan data pemetaan juz ke halaman) atau langsung navigasi ke nomor halaman yang dimasukkan.
-
-## 4. Langkah-langkah Pengerjaan
-
-1.  **[UI]** Tambahkan `ToggleGroup` di `SurahDetail` untuk beralih antara mode "Daftar" dan "Halaman".
-2.  **[Komponen]** Buat kerangka komponen `QuranPageView.tsx`.
-3.  **[Rendering]** Implementasikan logika untuk mengambil data dari `/pages/{pageNumber}` dan merender ayat-ayat dalam satu baris yang bisa wrap, lengkap dengan styling nomor ayat.
-4.  **[Navigasi]** Tambahkan fungsionalitas navigasi dasar (tombol panah dan swipe).
-5.  **[Dialog]** Buat `Dialog` untuk fitur "Lompat ke Halaman/Juz".
-6.  **[Styling]** Implementasikan desain untuk penanda Juz dan styling terjemahan (menggunakan `Collapsible`).
-7.  **[Fitur]** Tambahkan tombol aksi per halaman (Play, Bookmark, Copy).
-8.  **[Integrasi Audio]** Hubungkan `QuranPageView` dengan state audio global untuk navigasi yang digerakkan oleh audio.
-9.  **[Testing]** Uji coba semua fungsionalitas, terutama transisi antar halaman dan akurasi data.
+1.  **[Global UI] Implementasi Garis Pemisah:** Modifikasi `VerseCard.tsx` untuk menambahkan `<Separator />` atau `border-b` di bagian bawah. Verifikasi tampilannya di mode Surah dan Juz.
+2.  **[Mode Halaman - Data] Tampilkan Nama & Nomor Surah:** Implementasikan logika di header `QuranPageView.tsx` untuk menampilkan nama surah (Arab & Latin) dan nomornya. Terapkan aturan untuk menampilkan surah kedua jika ada lebih dari satu.
+3.  **[Mode Halaman - UI] Styling Nomor Halaman:** Buat atau modifikasi komponen untuk menampilkan nomor halaman dengan font kaligrafi dan angka Arab.
+4.  **[Mode Halaman - Fitur] Implementasi "Lompat ke Halaman":** Buat `JumpToPageDialog.tsx` dan integrasikan dengan `QuranPageView.tsx`.
+5.  **[Mode Halaman - Fitur] Implementasi Terjemahan Satu Halaman:** Tambahkan state lokal, tombol, dan logika rendering kondisional untuk beralih antara teks Arab dan tampilan terjemahan.
+6.  **[Testing] Uji Coba Menyeluruh:** Verifikasi semua fungsionalitas baru: navigasi halaman, dialog "Lompat ke", tombol terjemahan, tampilan informasi surah yang benar (terutama pada halaman dengan dua surah), dan tampilan garis pemisah di semua mode.

@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState, createRef } from "react";
 import { quranApi } from "@/services/quranApi";
 import { VerseCard } from "@/components/quran/VerseCard";
-import { StickyAudioPlayer } from "@/components/quran/StickyAudioPlayer";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { JumpToVerseDialog } from "@/components/dialogs/JumpToVerseDialog";
@@ -128,14 +127,14 @@ export const SurahDetail = () => {
 
   const handleTouchEnd = () => {
     if (swipeStart === null) return;
-    const threshold = 100;
+    const threshold = window.innerWidth / 2;
     if (Math.abs(swipeDistance) > threshold) {
       if (swipeDistance > 0 && surahNum > 1) {
         navigate(`/surah/${surahNum - 1}`);
-        toast({ title: "Pindah Surah", description: `Beralih ke surah sebelumnya` });
+        toast({ title: "Pindah Surah", description: `Beralih ke surah sebelumnya`, duration: 1000 });
       } else if (swipeDistance < 0 && surahNum < 114) {
         navigate(`/surah/${surahNum + 1}`);
-        toast({ title: "Pindah Surah", description: `Beralih ke surah selanjutnya` });
+        toast({ title: "Pindah Surah", description: `Beralih ke surah selanjutnya`, duration: 1000 });
       }
     }
     setSwipeStart(null);
@@ -218,7 +217,7 @@ export const SurahDetail = () => {
               </Button>
             </div>
           </div>
-          {Math.abs(swipeDistance) > 50 && (
+          {Math.abs(swipeDistance) > window.innerWidth / 4 && (
             <div className="absolute top-full left-0 right-0 bg-primary/10 backdrop-blur-sm p-2 text-center animate-slide-in-right border-b border-primary/20">
               <p className="text-sm text-primary font-medium animate-fade-in">
                 {swipeDistance > 0 ? `← Surah sebelumnya ${surahNum > 1 ? `(${surahNum - 1})` : ""}` : `Surah selanjutnya → ${surahNum < 114 ? `(${surahNum + 1})` : ""}`}

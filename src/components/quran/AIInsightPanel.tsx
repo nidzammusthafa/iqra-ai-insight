@@ -91,6 +91,8 @@ export const AIInsightPanel = ({
     }
   }, [apiKey, surahNumber, verseNumber, verseText, verseTranslation, toast]);
 
+  const [hasSearched, setHasSearched] = useState(false);
+
   useEffect(() => {
     const storedApiKey = localStorage.getItem("gemini_api_key");
     if (storedApiKey) {
@@ -98,23 +100,40 @@ export const AIInsightPanel = ({
     }
   }, []);
 
-  useEffect(() => {
-    if (apiKey) {
-      fetchInsights();
-    }
-  }, [surahNumber, verseNumber, apiKey, fetchInsights]);
+  const handleFetchInsights = () => {
+    setHasSearched(true);
+    fetchInsights();
+  };
 
   const handleApiKeySet = (newApiKey: string) => {
     setApiKey(newApiKey);
+    setShowApiKeyDialog(false);
     toast({
       title: "API key berhasil disimpan",
-      description: "Wawasan AI siap digunakan",
+      description: "Anda sekarang dapat memulai analisis AI.",
     });
   };
 
   const handleChangeApiKey = () => {
     setShowApiKeyDialog(true);
   };
+
+  const renderInitialState = () => (
+    <div className="text-center py-6 space-y-3">
+      <div className="w-16 h-16 mx-auto bg-primary-light rounded-full flex items-center justify-center mb-3">
+        <Sparkles className="w-8 h-8 text-primary" />
+      </div>
+      <h4 className="font-medium text-foreground">Dapatkan Wawasan Ayat</h4>
+      <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+        Gunakan kekuatan AI untuk mendapatkan pemahaman mendalam tentang ayat
+        ini, termasuk asbabun nuzul, tafsir ringkas, dan hikmah praktis.
+      </p>
+      <Button onClick={handleFetchInsights} className="mt-3">
+        <Sparkles className="w-4 h-4 mr-2" />
+        Mulai Analisis AI
+      </Button>
+    </div>
+  );
 
   return (
     <>
@@ -125,7 +144,7 @@ export const AIInsightPanel = ({
             <Sparkles className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Wawasan Ayat AI</h3>
             <span className="text-xs bg-primary-light text-primary px-2 py-1 rounded-full">
-              Gemini 2.5 Flash
+              Gemini 1.5 Flash
             </span>
           </div>
           <div className="flex items-center space-x-2">
@@ -160,7 +179,7 @@ export const AIInsightPanel = ({
             <h4 className="font-medium text-foreground">API Key Diperlukan</h4>
             <p className="text-muted-foreground text-sm">
               Untuk mengakses wawasan ayat dengan AI, Anda memerlukan API key
-              Google Gemini
+              Google Gemini.
             </p>
             <Button onClick={() => setShowApiKeyDialog(true)} className="mt-3">
               <Key className="w-4 h-4 mr-2" />
@@ -178,7 +197,7 @@ export const AIInsightPanel = ({
           <div className="text-center py-4 space-y-3">
             <p className="text-destructive text-sm">{error}</p>
             <div className="flex justify-center space-x-2">
-              <Button variant="outline" size="sm" onClick={fetchInsights}>
+              <Button variant="outline" size="sm" onClick={handleFetchInsights}>
                 Coba Lagi
               </Button>
               <Button variant="outline" size="sm" onClick={handleChangeApiKey}>
@@ -317,7 +336,9 @@ export const AIInsightPanel = ({
               </div>
             )}
           </div>
-        ) : null}
+        ) : hasSearched ? null : (
+          renderInitialState()
+        )}
       </div>
 
       {/* API Key Dialog */}
