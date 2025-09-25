@@ -2,16 +2,17 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { PreferencesSlice, createPreferencesSlice } from './preferencesSlice';
 import { BookmarkSlice, createBookmarkSlice } from './bookmarkSlice';
+import { SurahListSlice, createSurahListSlice } from './surahListSlice';
 
-// The main app state now only includes persisted slices.
-// Audio state is managed in its own separate store (useAudioStore).
-type AppState = PreferencesSlice & BookmarkSlice;
+// The main app state now includes the new surah list slice.
+type AppState = PreferencesSlice & BookmarkSlice & SurahListSlice;
 
 export const useAppStore = create<AppState>()(
   persist(
     (...a) => ({
       ...createPreferencesSlice(...a),
       ...createBookmarkSlice(...a),
+      ...createSurahListSlice(...a),
     }),
     {
       name: 'quran-app-store', // A single key for the persisted state

@@ -58,7 +58,7 @@ export const MobileLayout = ({ children }: MobileLayoutProps) => {
   }, [setAudioRef]);
 
   return (
-    <div className="mobile-container">
+    <div className="mobile-container max-w-screen overflow-x-hidden mx-auto">
       <audio ref={audioRef} />
       <main className={cn("min-h-screen", !isFocusMode && "pb-20")}>
         {children}

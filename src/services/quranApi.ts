@@ -66,6 +66,19 @@ class QuranApiService {
     return response.json();
   }
 
+  /**
+   * Mengambil daftar surah dengan nama Arab dari API lama.
+   * @returns {Promise<any[]>} Daftar surah.
+   */
+  async getSuratListWithArabicNames(): Promise<any[]> {
+    const response = await fetch(`https://quran-api2.vercel.app/api/list-surat`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch surah list with Arabic names");
+    }
+    const data = await response.json();
+    return data.data; // The actual list is in the 'data' property
+  }
+
   // Search verses globally (Legacy API)
   async searchVerses(
     query: string,
