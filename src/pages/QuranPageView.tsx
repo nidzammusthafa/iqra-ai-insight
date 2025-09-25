@@ -46,6 +46,46 @@ export const QuranPageView = () => {
     enabled: !!pageNum && pageNum >= 1 && pageNum <= 604,
   });
 
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= 604) {
+      stop();
+      navigate(`/page/${page}`);
+    }
+  };
+
+  const handleVerseClick = (verse: PageVerse, surah: SurahInPage) => {
+    setSelectedVerse({ verse, surah });
+    setIsVerseSheetOpen(true);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setSwipeStart(e.touches[0].clientX);
+    setSwipeDistance(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (swipeStart === null) return;
+    const currentTouch = e.touches[0].clientX;
+    const distance = currentTouch - swipeStart;
+    setSwipeDistance(distance);
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeStart === null) return;
+    const threshold = window.innerWidth / 3;
+    if (Math.abs(swipeDistance) > threshold) {
+      if (swipeDistance > 0 && pageNum > 1) {
+        goToPage(pageNum - 1);
+        toast({ description: `Beralih ke halaman ${pageNum - 1}`, duration: 1500 });
+      } else if (swipeDistance < 0 && pageNum < 604) {
+        goToPage(pageNum + 1);
+        toast({ description: `Beralih ke halaman ${pageNum + 1}`, duration: 1500 });
+      }
+    }
+    setSwipeStart(null);
+    setSwipeDistance(0);
+  };
+
   const headerInfo = useMemo(() => {
     if (!pageData || pageData.length === 0 || surahList.length === 0) {
       return { surahName: "", surahNumber: "" };

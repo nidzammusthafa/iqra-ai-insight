@@ -119,7 +119,7 @@ export const AIInsightPanel = ({
   };
 
   const renderInitialState = () => (
-    <div className="text-center py-6 space-y-3">
+    <div className="text-center py-6 space-y-3 w-full">
       <div className="w-16 h-16 mx-auto bg-primary-light rounded-full flex items-center justify-center mb-3">
         <Sparkles className="w-8 h-8 text-primary" />
       </div>

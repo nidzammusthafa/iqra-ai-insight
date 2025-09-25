@@ -31,16 +31,12 @@ export const StickyAudioPlayer = () => {
   const location = useLocation();
   const [progress, setProgress] = useState({ currentTime: 0, duration: 0 });
 
-  // Effect to sync page navigation
   useEffect(() => {
     // Only sync navigation if we are in surah view to avoid conflicts with page/juz modes
     if (currentSurah && location.pathname.startsWith('/surah/')) {
-      const pathSurahNumber = parseInt(location.pathname.split('/')[2], 10);
-      if (!isNaN(pathSurahNumber) && pathSurahNumber !== currentSurah.number) {
         navigate(`/surah/${currentSurah.number}`);
-      }
     }
-  }, [currentSurah, navigate, location.pathname]);
+  }, [currentSurah, navigate]);
 
   // Effect to update time progress
   useEffect(() => {
