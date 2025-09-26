@@ -193,7 +193,8 @@ export type Qari = typeof QARIS[number];
 
 // Reading preferences
 export type ReadingPreferences = {
-  arabicFontSize: 'small' | 'medium' | 'large' | 'xl';
+  arabicFontFamily: string;
+  arabicFontSize: number;
   translationFontSize: 'small' | 'medium' | 'large';
   showTranslation: boolean;
   showVerseActionButtons: boolean;

@@ -126,14 +126,6 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
     }
   };
 
-  const getArabicFontClass = () => {
-    switch (preferences.arabicFontSize) {
-      case "small": return "arabic-small";
-      case "large": return "arabic-large";
-      case "xl": return "text-3xl leading-relaxed";
-      default: return "";
-    }
-  };
 
   const getTranslationFontClass = () => {
     switch (preferences.translationFontSize) {
@@ -223,9 +215,12 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
           <div
             className={cn(
               "arabic-text text-right text-foreground",
-              getArabicFontClass(),
               getLineSpacingClass()
             )}
+            style={{
+              fontFamily: preferences.arabicFontFamily,
+              fontSize: `${preferences.arabicFontSize}px`,
+            }}
           >
             {verseText}
           </div>
@@ -236,9 +231,12 @@ export const VerseCard = forwardRef<HTMLDivElement, VerseCardProps>((
           <div
             className={cn(
               "arabic-text flex-grow text-right text-foreground",
-              getArabicFontClass(),
               getLineSpacingClass()
             )}
+            style={{
+              fontFamily: preferences.arabicFontFamily,
+              fontSize: `${preferences.arabicFontSize}px`,
+            }}
           >
             {verseText}
           </div>

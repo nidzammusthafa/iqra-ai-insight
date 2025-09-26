@@ -2,7 +2,8 @@ import { StateCreator } from 'zustand';
 import { ReadingPreferences, TranslationId } from '@/types/quran';
 
 const DEFAULT_PREFERENCES: ReadingPreferences = {
-  arabicFontSize: 'medium',
+  arabicFontFamily: 'Amiri',
+  arabicFontSize: 24,
   translationFontSize: 'medium',
   showTranslation: true,
   showVerseActionButtons: true,

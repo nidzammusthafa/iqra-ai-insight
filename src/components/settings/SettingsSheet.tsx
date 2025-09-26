@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -226,24 +227,69 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 </div>
                 <Separator />
                 <div className="space-y-3">
-                  <p className="font-medium">Ukuran Font Arab</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {["small", "medium", "large"].map((size) => (
-                      <Button
-                        key={size}
-                        variant={
-                          preferences.arabicFontSize === size
-                            ? "default"
-                            : "outline"
+                  <p className="font-medium">Jenis Font Arab</p>
+                  <Select
+                    value={preferences.arabicFontFamily}
+                    onValueChange={(value) =>
+                      updatePreferences({ arabicFontFamily: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Jenis Font" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        "Amiri",
+                        "Noto Naskh Arabic",
+                        "Lateef",
+                        "Scheherazade New",
+                      ].map((font) => (
+                        <SelectItem key={font} value={font}>
+                          {font}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-3">
+                  <p className="font-medium">Ukuran Font Arab (px)</p>
+                  <div className="flex items-center gap-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() =>
+                        updatePreferences({
+                          arabicFontSize: Math.max(
+                            12,
+                            preferences.arabicFontSize - 1
+                          ),
+                        })
+                      }
+                    >
+                      -
+                    </Button>
+                    <Input
+                      type="number"
+                      className="text-center"
+                      value={preferences.arabicFontSize}
+                      onChange={(e) => {
+                        const newSize = parseInt(e.target.value, 10);
+                        if (!isNaN(newSize)) {
+                          updatePreferences({ arabicFontSize: newSize });
                         }
-                        size="sm"
-                        onClick={() =>
-                          updatePreferences({ arabicFontSize: size as any })
-                        }
-                      >
-                        {size.charAt(0).toUpperCase() + size.slice(1)}
-                      </Button>
-                    ))}
+                      }}
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() =>
+                        updatePreferences({
+                          arabicFontSize: preferences.arabicFontSize + 1,
+                        })
+                      }
+                    >
+                      +
+                    </Button>
                   </div>
                 </div>
                 <div className="space-y-3">

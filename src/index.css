@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&family=Lateef&family=Noto+Naskh+Arabic:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -163,15 +163,7 @@
     font-size: 1.5rem;
   }
   
-  .arabic-large {
-    font-size: 2rem;
-    line-height: 2.4;
-  }
-  
-  .arabic-small {
-    font-size: 1.25rem;
-    line-height: 2;
-  }
+
   
   /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
